@@ -1,0 +1,17 @@
+# PortfolioApp Import Template v1
+# Delete these comment lines (starting with #) before importing.
+# Required columns: Symbol, TradeDate, Action, Quantity, PricePerShare
+# Optional columns: CostBasis, AssetType, Sector, Fee, Notes
+#
+# Supported Actions: BUY, SELL, DIVIDEND, DRIP, SPLIT, TRANSFER_IN, TRANSFER_OUT
+# Supported AssetType values: Stock, ETF, Crypto, Options, Treasury
+# Date formats: YYYY-MM-DD (preferred), MM/DD/YYYY, MMM D YYYY
+#
+# SPLIT rows: leave Quantity and PricePerShare blank, put ratio in Notes e.g. "10:1"
+# DRIP rows: Quantity = shares reinvested, PricePerShare = price at reinvestment
+Symbol,TradeDate,Action,Quantity,PricePerShare,CostBasis,AssetType,Sector,Fee,Notes
+AAPL,2023-06-12,BUY,10,178.20,1782.00,Stock,Consumer Tech,9.99,
+NVDA,2024-03-03,BUY,5,875.00,4375.00,Stock,Semiconductors,9.99,
+BTC,2024-11-05,BUY,0.25,42000.00,10500.00,Crypto,,,0,
+NVDA,2024-06-10,SPLIT,,,,,,,10:1 forward split
+AAPL,2025-03-14,SELL,5,220.00,,Stock,,,9.99,

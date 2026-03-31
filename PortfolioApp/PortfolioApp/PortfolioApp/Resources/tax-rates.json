@@ -1,0 +1,1215 @@
+{
+  "version": "2026.1",
+  "effectiveYear": 2026,
+  "updatedAt": "2026-01-15",
+  "federal": {
+    "ordinary": {
+      "single": [
+        { "min": 0,      "max": 11925,  "rate": 0.10 },
+        { "min": 11925,  "max": 48475,  "rate": 0.12 },
+        { "min": 48475,  "max": 103350, "rate": 0.22 },
+        { "min": 103350, "max": 197300, "rate": 0.24 },
+        { "min": 197300, "max": 250525, "rate": 0.32 },
+        { "min": 250525, "max": 626350, "rate": 0.35 },
+        { "min": 626350, "max": null,   "rate": 0.37 }
+      ],
+      "mfj": [
+        { "min": 0,      "max": 23850,  "rate": 0.10 },
+        { "min": 23850,  "max": 96950,  "rate": 0.12 },
+        { "min": 96950,  "max": 206700, "rate": 0.22 },
+        { "min": 206700, "max": 394600, "rate": 0.24 },
+        { "min": 394600, "max": 501050, "rate": 0.32 },
+        { "min": 501050, "max": 751600, "rate": 0.35 },
+        { "min": 751600, "max": null,   "rate": 0.37 }
+      ],
+      "mfs": [
+        { "min": 0,      "max": 11925,  "rate": 0.10 },
+        { "min": 11925,  "max": 48475,  "rate": 0.12 },
+        { "min": 48475,  "max": 103350, "rate": 0.22 },
+        { "min": 103350, "max": 197300, "rate": 0.24 },
+        { "min": 197300, "max": 250525, "rate": 0.32 },
+        { "min": 250525, "max": 375800, "rate": 0.35 },
+        { "min": 375800, "max": null,   "rate": 0.37 }
+      ],
+      "hoh": [
+        { "min": 0,      "max": 17000,  "rate": 0.10 },
+        { "min": 17000,  "max": 64850,  "rate": 0.12 },
+        { "min": 64850,  "max": 103350, "rate": 0.22 },
+        { "min": 103350, "max": 197300, "rate": 0.24 },
+        { "min": 197300, "max": 250525, "rate": 0.32 },
+        { "min": 250525, "max": 626350, "rate": 0.35 },
+        { "min": 626350, "max": null,   "rate": 0.37 }
+      ]
+    },
+    "ltcg": {
+      "single": [
+        { "min": 0,      "max": 48350,  "rate": 0.00 },
+        { "min": 48350,  "max": 533400, "rate": 0.15 },
+        { "min": 533400, "max": null,   "rate": 0.20 }
+      ],
+      "mfj": [
+        { "min": 0,      "max": 96700,  "rate": 0.00 },
+        { "min": 96700,  "max": 600050, "rate": 0.15 },
+        { "min": 600050, "max": null,   "rate": 0.20 }
+      ],
+      "mfs": [
+        { "min": 0,      "max": 48350,  "rate": 0.00 },
+        { "min": 48350,  "max": 300000, "rate": 0.15 },
+        { "min": 300000, "max": null,   "rate": 0.20 }
+      ],
+      "hoh": [
+        { "min": 0,      "max": 64750,  "rate": 0.00 },
+        { "min": 64750,  "max": 566700, "rate": 0.15 },
+        { "min": 566700, "max": null,   "rate": 0.20 }
+      ]
+    },
+    "niit": {
+      "rate": 0.038,
+      "thresholds": {
+        "single": 200000,
+        "mfj":    250000,
+        "mfs":    125000,
+        "hoh":    200000
+      }
+    }
+  },
+  "states": {
+    "AK": { "name": "Alaska",        "type": "none" },
+    "FL": { "name": "Florida",       "type": "none" },
+    "NV": { "name": "Nevada",        "type": "none" },
+    "NH": { "name": "New Hampshire", "type": "none" },
+    "SD": { "name": "South Dakota",  "type": "none" },
+    "TN": { "name": "Tennessee",     "type": "none" },
+    "TX": { "name": "Texas",         "type": "none" },
+    "WY": { "name": "Wyoming",       "type": "none" },
+
+    "AZ": { "name": "Arizona",       "type": "flat", "rate": 0.025,  "distinguishesLongTerm": false },
+    "CO": { "name": "Colorado",      "type": "flat", "rate": 0.044,  "distinguishesLongTerm": false },
+    "GA": { "name": "Georgia",       "type": "flat", "rate": 0.0539, "distinguishesLongTerm": false },
+    "ID": { "name": "Idaho",         "type": "flat", "rate": 0.058,  "distinguishesLongTerm": false },
+    "IL": { "name": "Illinois",      "type": "flat", "rate": 0.0495, "distinguishesLongTerm": false },
+    "IN": { "name": "Indiana",       "type": "flat", "rate": 0.0305, "distinguishesLongTerm": false },
+    "KY": { "name": "Kentucky",      "type": "flat", "rate": 0.040,  "distinguishesLongTerm": false },
+    "MI": { "name": "Michigan",      "type": "flat", "rate": 0.0405, "distinguishesLongTerm": false },
+    "MS": { "name": "Mississippi",   "type": "flat", "rate": 0.047,  "distinguishesLongTerm": false },
+    "NC": { "name": "North Carolina","type": "flat", "rate": 0.0475, "distinguishesLongTerm": false },
+    "ND": { "name": "North Dakota",  "type": "flat", "rate": 0.0195, "distinguishesLongTerm": false },
+    "PA": { "name": "Pennsylvania",  "type": "flat", "rate": 0.0307, "distinguishesLongTerm": false },
+    "SC": { "name": "South Carolina","type": "flat", "rate": 0.062,  "distinguishesLongTerm": false },
+    "UT": { "name": "Utah",          "type": "flat", "rate": 0.0455, "distinguishesLongTerm": false },
+
+    "MA": {
+      "name": "Massachusetts",
+      "type": "flat",
+      "distinguishesLongTerm": true,
+      "stTreatment": "special",
+      "ltTreatment": "ordinary",
+      "rate":   0.05,
+      "stRate": 0.085,
+      "ltRate": 0.05
+    },
+
+    "WA": {
+      "name": "Washington",
+      "type": "capitalgains",
+      "distinguishesLongTerm": false,
+      "stTreatment": "none",
+      "ltTreatment": "special",
+      "ltcgRate": 0.07,
+      "ltcgThreshold": 262050
+    },
+
+    "AL": {
+      "name": "Alabama",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 500,   "rate": 0.02 },
+          { "min": 500,   "max": 3000,  "rate": 0.04 },
+          { "min": 3000,  "max": null,  "rate": 0.05 }
+        ],
+        "mfj": [
+          { "min": 0,     "max": 1000,  "rate": 0.02 },
+          { "min": 1000,  "max": 6000,  "rate": 0.04 },
+          { "min": 6000,  "max": null,  "rate": 0.05 }
+        ],
+        "mfs": [
+          { "min": 0,     "max": 500,   "rate": 0.02 },
+          { "min": 500,   "max": 3000,  "rate": 0.04 },
+          { "min": 3000,  "max": null,  "rate": 0.05 }
+        ],
+        "hoh": [
+          { "min": 0,     "max": 500,   "rate": 0.02 },
+          { "min": 500,   "max": 3000,  "rate": 0.04 },
+          { "min": 3000,  "max": null,  "rate": 0.05 }
+        ]
+      }
+    },
+    "AR": {
+      "name": "Arkansas",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 4400,  "rate": 0.02 },
+          { "min": 4400,  "max": 8800,  "rate": 0.04 },
+          { "min": 8800,  "max": null,  "rate": 0.047 }
+        ],
+        "mfj":  [
+          { "min": 0,     "max": 4400,  "rate": 0.02 },
+          { "min": 4400,  "max": 8800,  "rate": 0.04 },
+          { "min": 8800,  "max": null,  "rate": 0.047 }
+        ],
+        "mfs":  [
+          { "min": 0,     "max": 4400,  "rate": 0.02 },
+          { "min": 4400,  "max": 8800,  "rate": 0.04 },
+          { "min": 8800,  "max": null,  "rate": 0.047 }
+        ],
+        "hoh":  [
+          { "min": 0,     "max": 4400,  "rate": 0.02 },
+          { "min": 4400,  "max": 8800,  "rate": 0.04 },
+          { "min": 8800,  "max": null,  "rate": 0.047 }
+        ]
+      }
+    },
+    "CA": {
+      "name": "California",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,       "max": 10756,  "rate": 0.01 },
+          { "min": 10756,   "max": 25499,  "rate": 0.02 },
+          { "min": 25499,   "max": 40245,  "rate": 0.04 },
+          { "min": 40245,   "max": 54992,  "rate": 0.06 },
+          { "min": 54992,   "max": 69784,  "rate": 0.08 },
+          { "min": 69784,   "max": 357214, "rate": 0.093 },
+          { "min": 357214,  "max": 428571, "rate": 0.103 },
+          { "min": 428571,  "max": 714286, "rate": 0.113 },
+          { "min": 714286,  "max": 1000000,"rate": 0.123 },
+          { "min": 1000000, "max": null,   "rate": 0.133 }
+        ],
+        "mfj": [
+          { "min": 0,       "max": 21512,  "rate": 0.01 },
+          { "min": 21512,   "max": 50998,  "rate": 0.02 },
+          { "min": 50998,   "max": 80490,  "rate": 0.04 },
+          { "min": 80490,   "max": 109984, "rate": 0.06 },
+          { "min": 109984,  "max": 139568, "rate": 0.08 },
+          { "min": 139568,  "max": 714428, "rate": 0.093 },
+          { "min": 714428,  "max": 857142, "rate": 0.103 },
+          { "min": 857142,  "max": 1000000,"rate": 0.113 },
+          { "min": 1000000, "max": null,   "rate": 0.133 }
+        ],
+        "mfs": [
+          { "min": 0,       "max": 10756,  "rate": 0.01 },
+          { "min": 10756,   "max": 25499,  "rate": 0.02 },
+          { "min": 25499,   "max": 40245,  "rate": 0.04 },
+          { "min": 40245,   "max": 54992,  "rate": 0.06 },
+          { "min": 54992,   "max": 69784,  "rate": 0.08 },
+          { "min": 69784,   "max": 357214, "rate": 0.093 },
+          { "min": 357214,  "max": 428571, "rate": 0.103 },
+          { "min": 428571,  "max": 714286, "rate": 0.113 },
+          { "min": 714286,  "max": null,   "rate": 0.123 }
+        ],
+        "hoh": [
+          { "min": 0,       "max": 21512,  "rate": 0.01 },
+          { "min": 21512,   "max": 50998,  "rate": 0.02 },
+          { "min": 50998,   "max": 65744,  "rate": 0.04 },
+          { "min": 65744,   "max": 80490,  "rate": 0.06 },
+          { "min": 80490,   "max": 95343,  "rate": 0.08 },
+          { "min": 95343,   "max": 488850, "rate": 0.093 },
+          { "min": 488850,  "max": 587000, "rate": 0.103 },
+          { "min": 587000,  "max": 1000000,"rate": 0.113 },
+          { "min": 1000000, "max": null,   "rate": 0.133 }
+        ]
+      }
+    },
+    "CT": {
+      "name": "Connecticut",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,      "max": 10000,  "rate": 0.03 },
+          { "min": 10000,  "max": 50000,  "rate": 0.05 },
+          { "min": 50000,  "max": 100000, "rate": 0.055 },
+          { "min": 100000, "max": 200000, "rate": 0.06 },
+          { "min": 200000, "max": 250000, "rate": 0.065 },
+          { "min": 250000, "max": 500000, "rate": 0.069 },
+          { "min": 500000, "max": null,   "rate": 0.0699 }
+        ],
+        "mfj": [
+          { "min": 0,      "max": 20000,  "rate": 0.03 },
+          { "min": 20000,  "max": 100000, "rate": 0.05 },
+          { "min": 100000, "max": 200000, "rate": 0.055 },
+          { "min": 200000, "max": 400000, "rate": 0.06 },
+          { "min": 400000, "max": 500000, "rate": 0.065 },
+          { "min": 500000, "max": 1000000,"rate": 0.069 },
+          { "min": 1000000,"max": null,   "rate": 0.0699 }
+        ],
+        "mfs": [
+          { "min": 0,      "max": 10000,  "rate": 0.03 },
+          { "min": 10000,  "max": 50000,  "rate": 0.05 },
+          { "min": 50000,  "max": 100000, "rate": 0.055 },
+          { "min": 100000, "max": 200000, "rate": 0.06 },
+          { "min": 200000, "max": 250000, "rate": 0.065 },
+          { "min": 250000, "max": 500000, "rate": 0.069 },
+          { "min": 500000, "max": null,   "rate": 0.0699 }
+        ],
+        "hoh": [
+          { "min": 0,      "max": 16000,  "rate": 0.03 },
+          { "min": 16000,  "max": 80000,  "rate": 0.05 },
+          { "min": 80000,  "max": 160000, "rate": 0.055 },
+          { "min": 160000, "max": 320000, "rate": 0.06 },
+          { "min": 320000, "max": 400000, "rate": 0.065 },
+          { "min": 400000, "max": 800000, "rate": 0.069 },
+          { "min": 800000, "max": null,   "rate": 0.0699 }
+        ]
+      }
+    },
+    "DC": {
+      "name": "District of Columbia",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,      "max": 10000,  "rate": 0.04 },
+          { "min": 10000,  "max": 40000,  "rate": 0.06 },
+          { "min": 40000,  "max": 60000,  "rate": 0.065 },
+          { "min": 60000,  "max": 250000, "rate": 0.085 },
+          { "min": 250000, "max": 500000, "rate": 0.0925 },
+          { "min": 500000, "max": 1000000,"rate": 0.0975 },
+          { "min": 1000000,"max": null,   "rate": 0.1075 }
+        ],
+        "mfj": [
+          { "min": 0,      "max": 10000,  "rate": 0.04 },
+          { "min": 10000,  "max": 40000,  "rate": 0.06 },
+          { "min": 40000,  "max": 60000,  "rate": 0.065 },
+          { "min": 60000,  "max": 250000, "rate": 0.085 },
+          { "min": 250000, "max": 500000, "rate": 0.0925 },
+          { "min": 500000, "max": 1000000,"rate": 0.0975 },
+          { "min": 1000000,"max": null,   "rate": 0.1075 }
+        ],
+        "mfs": [
+          { "min": 0,      "max": 10000,  "rate": 0.04 },
+          { "min": 10000,  "max": 40000,  "rate": 0.06 },
+          { "min": 40000,  "max": 60000,  "rate": 0.065 },
+          { "min": 60000,  "max": 250000, "rate": 0.085 },
+          { "min": 250000, "max": 500000, "rate": 0.0925 },
+          { "min": 500000, "max": null,   "rate": 0.0975 }
+        ],
+        "hoh": [
+          { "min": 0,      "max": 10000,  "rate": 0.04 },
+          { "min": 10000,  "max": 40000,  "rate": 0.06 },
+          { "min": 40000,  "max": 60000,  "rate": 0.065 },
+          { "min": 60000,  "max": 250000, "rate": 0.085 },
+          { "min": 250000, "max": 500000, "rate": 0.0925 },
+          { "min": 500000, "max": 1000000,"rate": 0.0975 },
+          { "min": 1000000,"max": null,   "rate": 0.1075 }
+        ]
+      }
+    },
+    "DE": {
+      "name": "Delaware",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 2000,  "rate": 0.00 },
+          { "min": 2000,  "max": 5000,  "rate": 0.022 },
+          { "min": 5000,  "max": 10000, "rate": 0.039 },
+          { "min": 10000, "max": 20000, "rate": 0.048 },
+          { "min": 20000, "max": 25000, "rate": 0.052 },
+          { "min": 25000, "max": 60000, "rate": 0.0555 },
+          { "min": 60000, "max": null,  "rate": 0.066 }
+        ],
+        "mfj": [
+          { "min": 0,     "max": 2000,  "rate": 0.00 },
+          { "min": 2000,  "max": 5000,  "rate": 0.022 },
+          { "min": 5000,  "max": 10000, "rate": 0.039 },
+          { "min": 10000, "max": 20000, "rate": 0.048 },
+          { "min": 20000, "max": 25000, "rate": 0.052 },
+          { "min": 25000, "max": 60000, "rate": 0.0555 },
+          { "min": 60000, "max": null,  "rate": 0.066 }
+        ],
+        "mfs": [
+          { "min": 0,     "max": 2000,  "rate": 0.00 },
+          { "min": 2000,  "max": 5000,  "rate": 0.022 },
+          { "min": 5000,  "max": 10000, "rate": 0.039 },
+          { "min": 10000, "max": 20000, "rate": 0.048 },
+          { "min": 20000, "max": 25000, "rate": 0.052 },
+          { "min": 25000, "max": 60000, "rate": 0.0555 },
+          { "min": 60000, "max": null,  "rate": 0.066 }
+        ],
+        "hoh": [
+          { "min": 0,     "max": 2000,  "rate": 0.00 },
+          { "min": 2000,  "max": 5000,  "rate": 0.022 },
+          { "min": 5000,  "max": 10000, "rate": 0.039 },
+          { "min": 10000, "max": 20000, "rate": 0.048 },
+          { "min": 20000, "max": 25000, "rate": 0.052 },
+          { "min": 25000, "max": 60000, "rate": 0.0555 },
+          { "min": 60000, "max": null,  "rate": 0.066 }
+        ]
+      }
+    },
+    "HI": {
+      "name": "Hawaii",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 2400,  "rate": 0.014 },
+          { "min": 2400,  "max": 4800,  "rate": 0.032 },
+          { "min": 4800,  "max": 9600,  "rate": 0.055 },
+          { "min": 9600,  "max": 14400, "rate": 0.064 },
+          { "min": 14400, "max": 19200, "rate": 0.068 },
+          { "min": 19200, "max": 24000, "rate": 0.072 },
+          { "min": 24000, "max": 48000, "rate": 0.076 },
+          { "min": 48000, "max": 150000,"rate": 0.079 },
+          { "min": 150000,"max": 175000,"rate": 0.0825 },
+          { "min": 175000,"max": 200000,"rate": 0.09 },
+          { "min": 200000,"max": null,  "rate": 0.11 }
+        ],
+        "mfj": [
+          { "min": 0,     "max": 4800,  "rate": 0.014 },
+          { "min": 4800,  "max": 9600,  "rate": 0.032 },
+          { "min": 9600,  "max": 19200, "rate": 0.055 },
+          { "min": 19200, "max": 28800, "rate": 0.064 },
+          { "min": 28800, "max": 38400, "rate": 0.068 },
+          { "min": 38400, "max": 48000, "rate": 0.072 },
+          { "min": 48000, "max": 96000, "rate": 0.076 },
+          { "min": 96000, "max": 300000,"rate": 0.079 },
+          { "min": 300000,"max": 350000,"rate": 0.0825 },
+          { "min": 350000,"max": 400000,"rate": 0.09 },
+          { "min": 400000,"max": null,  "rate": 0.11 }
+        ],
+        "mfs": [
+          { "min": 0,     "max": 2400,  "rate": 0.014 },
+          { "min": 2400,  "max": 4800,  "rate": 0.032 },
+          { "min": 4800,  "max": 9600,  "rate": 0.055 },
+          { "min": 9600,  "max": 14400, "rate": 0.064 },
+          { "min": 14400, "max": 19200, "rate": 0.068 },
+          { "min": 19200, "max": 24000, "rate": 0.072 },
+          { "min": 24000, "max": 48000, "rate": 0.076 },
+          { "min": 48000, "max": 150000,"rate": 0.079 },
+          { "min": 150000,"max": 175000,"rate": 0.0825 },
+          { "min": 175000,"max": 200000,"rate": 0.09 },
+          { "min": 200000,"max": null,  "rate": 0.11 }
+        ],
+        "hoh": [
+          { "min": 0,     "max": 3600,  "rate": 0.014 },
+          { "min": 3600,  "max": 7200,  "rate": 0.032 },
+          { "min": 7200,  "max": 14400, "rate": 0.055 },
+          { "min": 14400, "max": 21600, "rate": 0.064 },
+          { "min": 21600, "max": 28800, "rate": 0.068 },
+          { "min": 28800, "max": 36000, "rate": 0.072 },
+          { "min": 36000, "max": 72000, "rate": 0.076 },
+          { "min": 72000, "max": 225000,"rate": 0.079 },
+          { "min": 225000,"max": 262500,"rate": 0.0825 },
+          { "min": 262500,"max": 300000,"rate": 0.09 },
+          { "min": 300000,"max": null,  "rate": 0.11 }
+        ]
+      }
+    },
+    "IA": {
+      "name": "Iowa",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 6000,  "rate": 0.044 },
+          { "min": 6000,  "max": 30000, "rate": 0.0482 },
+          { "min": 30000, "max": 75000, "rate": 0.057 },
+          { "min": 75000, "max": null,  "rate": 0.06 }
+        ],
+        "mfj": [
+          { "min": 0,     "max": 6000,  "rate": 0.044 },
+          { "min": 6000,  "max": 30000, "rate": 0.0482 },
+          { "min": 30000, "max": 75000, "rate": 0.057 },
+          { "min": 75000, "max": null,  "rate": 0.06 }
+        ],
+        "mfs": [
+          { "min": 0,     "max": 6000,  "rate": 0.044 },
+          { "min": 6000,  "max": 30000, "rate": 0.0482 },
+          { "min": 30000, "max": 75000, "rate": 0.057 },
+          { "min": 75000, "max": null,  "rate": 0.06 }
+        ],
+        "hoh": [
+          { "min": 0,     "max": 6000,  "rate": 0.044 },
+          { "min": 6000,  "max": 30000, "rate": 0.0482 },
+          { "min": 30000, "max": 75000, "rate": 0.057 },
+          { "min": 75000, "max": null,  "rate": 0.06 }
+        ]
+      }
+    },
+    "KS": {
+      "name": "Kansas",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 15000, "rate": 0.031 },
+          { "min": 15000, "max": 30000, "rate": 0.0525 },
+          { "min": 30000, "max": null,  "rate": 0.057 }
+        ],
+        "mfj": [
+          { "min": 0,     "max": 30000, "rate": 0.031 },
+          { "min": 30000, "max": 60000, "rate": 0.0525 },
+          { "min": 60000, "max": null,  "rate": 0.057 }
+        ],
+        "mfs": [
+          { "min": 0,     "max": 15000, "rate": 0.031 },
+          { "min": 15000, "max": 30000, "rate": 0.0525 },
+          { "min": 30000, "max": null,  "rate": 0.057 }
+        ],
+        "hoh": [
+          { "min": 0,     "max": 15000, "rate": 0.031 },
+          { "min": 15000, "max": 30000, "rate": 0.0525 },
+          { "min": 30000, "max": null,  "rate": 0.057 }
+        ]
+      }
+    },
+    "LA": {
+      "name": "Louisiana",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 12500, "rate": 0.0185 },
+          { "min": 12500, "max": 50000, "rate": 0.035 },
+          { "min": 50000, "max": null,  "rate": 0.0425 }
+        ],
+        "mfj": [
+          { "min": 0,     "max": 25000, "rate": 0.0185 },
+          { "min": 25000, "max": 100000,"rate": 0.035 },
+          { "min": 100000,"max": null,  "rate": 0.0425 }
+        ],
+        "mfs": [
+          { "min": 0,     "max": 12500, "rate": 0.0185 },
+          { "min": 12500, "max": 50000, "rate": 0.035 },
+          { "min": 50000, "max": null,  "rate": 0.0425 }
+        ],
+        "hoh": [
+          { "min": 0,     "max": 12500, "rate": 0.0185 },
+          { "min": 12500, "max": 50000, "rate": 0.035 },
+          { "min": 50000, "max": null,  "rate": 0.0425 }
+        ]
+      }
+    },
+    "MD": {
+      "name": "Maryland",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,      "max": 1000,   "rate": 0.02 },
+          { "min": 1000,   "max": 2000,   "rate": 0.03 },
+          { "min": 2000,   "max": 3000,   "rate": 0.04 },
+          { "min": 3000,   "max": 100000, "rate": 0.0475 },
+          { "min": 100000, "max": 125000, "rate": 0.05 },
+          { "min": 125000, "max": 150000, "rate": 0.0525 },
+          { "min": 150000, "max": 250000, "rate": 0.055 },
+          { "min": 250000, "max": null,   "rate": 0.0575 }
+        ],
+        "mfj": [
+          { "min": 0,      "max": 1000,   "rate": 0.02 },
+          { "min": 1000,   "max": 2000,   "rate": 0.03 },
+          { "min": 2000,   "max": 3000,   "rate": 0.04 },
+          { "min": 3000,   "max": 150000, "rate": 0.0475 },
+          { "min": 150000, "max": 175000, "rate": 0.05 },
+          { "min": 175000, "max": 225000, "rate": 0.0525 },
+          { "min": 225000, "max": 300000, "rate": 0.055 },
+          { "min": 300000, "max": null,   "rate": 0.0575 }
+        ],
+        "mfs": [
+          { "min": 0,      "max": 1000,   "rate": 0.02 },
+          { "min": 1000,   "max": 2000,   "rate": 0.03 },
+          { "min": 2000,   "max": 3000,   "rate": 0.04 },
+          { "min": 3000,   "max": 100000, "rate": 0.0475 },
+          { "min": 100000, "max": 125000, "rate": 0.05 },
+          { "min": 125000, "max": 150000, "rate": 0.0525 },
+          { "min": 150000, "max": 250000, "rate": 0.055 },
+          { "min": 250000, "max": null,   "rate": 0.0575 }
+        ],
+        "hoh": [
+          { "min": 0,      "max": 1000,   "rate": 0.02 },
+          { "min": 1000,   "max": 2000,   "rate": 0.03 },
+          { "min": 2000,   "max": 3000,   "rate": 0.04 },
+          { "min": 3000,   "max": 150000, "rate": 0.0475 },
+          { "min": 150000, "max": 175000, "rate": 0.05 },
+          { "min": 175000, "max": 225000, "rate": 0.0525 },
+          { "min": 225000, "max": 300000, "rate": 0.055 },
+          { "min": 300000, "max": null,   "rate": 0.0575 }
+        ]
+      }
+    },
+    "ME": {
+      "name": "Maine",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 24500, "rate": 0.058 },
+          { "min": 24500, "max": 58050, "rate": 0.0675 },
+          { "min": 58050, "max": null,  "rate": 0.0715 }
+        ],
+        "mfj": [
+          { "min": 0,     "max": 49050, "rate": 0.058 },
+          { "min": 49050, "max": 116100,"rate": 0.0675 },
+          { "min": 116100,"max": null,  "rate": 0.0715 }
+        ],
+        "mfs": [
+          { "min": 0,     "max": 24500, "rate": 0.058 },
+          { "min": 24500, "max": 58050, "rate": 0.0675 },
+          { "min": 58050, "max": null,  "rate": 0.0715 }
+        ],
+        "hoh": [
+          { "min": 0,     "max": 36750, "rate": 0.058 },
+          { "min": 36750, "max": 87050, "rate": 0.0675 },
+          { "min": 87050, "max": null,  "rate": 0.0715 }
+        ]
+      }
+    },
+    "MN": {
+      "name": "Minnesota",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,      "max": 31690,  "rate": 0.0535 },
+          { "min": 31690,  "max": 104090, "rate": 0.068 },
+          { "min": 104090, "max": 193240, "rate": 0.0785 },
+          { "min": 193240, "max": null,   "rate": 0.0985 }
+        ],
+        "mfj": [
+          { "min": 0,      "max": 46330,  "rate": 0.0535 },
+          { "min": 46330,  "max": 184040, "rate": 0.068 },
+          { "min": 184040, "max": 320090, "rate": 0.0785 },
+          { "min": 320090, "max": null,   "rate": 0.0985 }
+        ],
+        "mfs": [
+          { "min": 0,      "max": 23165,  "rate": 0.0535 },
+          { "min": 23165,  "max": 92020,  "rate": 0.068 },
+          { "min": 92020,  "max": 160045, "rate": 0.0785 },
+          { "min": 160045, "max": null,   "rate": 0.0985 }
+        ],
+        "hoh": [
+          { "min": 0,      "max": 39410,  "rate": 0.0535 },
+          { "min": 39410,  "max": 158140, "rate": 0.068 },
+          { "min": 158140, "max": 256665, "rate": 0.0785 },
+          { "min": 256665, "max": null,   "rate": 0.0985 }
+        ]
+      }
+    },
+    "MO": {
+      "name": "Missouri",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 1207,  "rate": 0.015 },
+          { "min": 1207,  "max": 2414,  "rate": 0.02 },
+          { "min": 2414,  "max": 3622,  "rate": 0.025 },
+          { "min": 3622,  "max": 4829,  "rate": 0.03 },
+          { "min": 4829,  "max": 6036,  "rate": 0.035 },
+          { "min": 6036,  "max": 7243,  "rate": 0.04 },
+          { "min": 7243,  "max": 8450,  "rate": 0.045 },
+          { "min": 8450,  "max": null,  "rate": 0.0495 }
+        ],
+        "mfj": [
+          { "min": 0,     "max": 1207,  "rate": 0.015 },
+          { "min": 1207,  "max": 2414,  "rate": 0.02 },
+          { "min": 2414,  "max": 3622,  "rate": 0.025 },
+          { "min": 3622,  "max": 4829,  "rate": 0.03 },
+          { "min": 4829,  "max": 6036,  "rate": 0.035 },
+          { "min": 6036,  "max": 7243,  "rate": 0.04 },
+          { "min": 7243,  "max": 8450,  "rate": 0.045 },
+          { "min": 8450,  "max": null,  "rate": 0.0495 }
+        ],
+        "mfs": [
+          { "min": 0,     "max": 1207,  "rate": 0.015 },
+          { "min": 1207,  "max": 2414,  "rate": 0.02 },
+          { "min": 2414,  "max": 3622,  "rate": 0.025 },
+          { "min": 3622,  "max": 4829,  "rate": 0.03 },
+          { "min": 4829,  "max": 6036,  "rate": 0.035 },
+          { "min": 6036,  "max": 7243,  "rate": 0.04 },
+          { "min": 7243,  "max": 8450,  "rate": 0.045 },
+          { "min": 8450,  "max": null,  "rate": 0.0495 }
+        ],
+        "hoh": [
+          { "min": 0,     "max": 1207,  "rate": 0.015 },
+          { "min": 1207,  "max": 2414,  "rate": 0.02 },
+          { "min": 2414,  "max": 3622,  "rate": 0.025 },
+          { "min": 3622,  "max": 4829,  "rate": 0.03 },
+          { "min": 4829,  "max": 6036,  "rate": 0.035 },
+          { "min": 6036,  "max": 7243,  "rate": 0.04 },
+          { "min": 7243,  "max": 8450,  "rate": 0.045 },
+          { "min": 8450,  "max": null,  "rate": 0.0495 }
+        ]
+      }
+    },
+    "MT": {
+      "name": "Montana",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 20500, "rate": 0.047 },
+          { "min": 20500, "max": null,  "rate": 0.059 }
+        ],
+        "mfj": [
+          { "min": 0,     "max": 41000, "rate": 0.047 },
+          { "min": 41000, "max": null,  "rate": 0.059 }
+        ],
+        "mfs": [
+          { "min": 0,     "max": 20500, "rate": 0.047 },
+          { "min": 20500, "max": null,  "rate": 0.059 }
+        ],
+        "hoh": [
+          { "min": 0,     "max": 20500, "rate": 0.047 },
+          { "min": 20500, "max": null,  "rate": 0.059 }
+        ]
+      }
+    },
+    "NE": {
+      "name": "Nebraska",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 3700,  "rate": 0.0246 },
+          { "min": 3700,  "max": 22170, "rate": 0.0351 },
+          { "min": 22170, "max": 35730, "rate": 0.0501 },
+          { "min": 35730, "max": null,  "rate": 0.0584 }
+        ],
+        "mfj": [
+          { "min": 0,     "max": 7390,  "rate": 0.0246 },
+          { "min": 7390,  "max": 44340, "rate": 0.0351 },
+          { "min": 44340, "max": 71460, "rate": 0.0501 },
+          { "min": 71460, "max": null,  "rate": 0.0584 }
+        ],
+        "mfs": [
+          { "min": 0,     "max": 3700,  "rate": 0.0246 },
+          { "min": 3700,  "max": 22170, "rate": 0.0351 },
+          { "min": 22170, "max": 35730, "rate": 0.0501 },
+          { "min": 35730, "max": null,  "rate": 0.0584 }
+        ],
+        "hoh": [
+          { "min": 0,     "max": 6860,  "rate": 0.0246 },
+          { "min": 6860,  "max": 33280, "rate": 0.0351 },
+          { "min": 33280, "max": 53600, "rate": 0.0501 },
+          { "min": 53600, "max": null,  "rate": 0.0584 }
+        ]
+      }
+    },
+    "NJ": {
+      "name": "New Jersey",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,      "max": 20000,  "rate": 0.014 },
+          { "min": 20000,  "max": 35000,  "rate": 0.0175 },
+          { "min": 35000,  "max": 40000,  "rate": 0.035 },
+          { "min": 40000,  "max": 75000,  "rate": 0.05525 },
+          { "min": 75000,  "max": 500000, "rate": 0.0637 },
+          { "min": 500000, "max": 1000000,"rate": 0.0897 },
+          { "min": 1000000,"max": null,   "rate": 0.1075 }
+        ],
+        "mfj": [
+          { "min": 0,      "max": 20000,  "rate": 0.014 },
+          { "min": 20000,  "max": 50000,  "rate": 0.0175 },
+          { "min": 50000,  "max": 70000,  "rate": 0.0245 },
+          { "min": 70000,  "max": 80000,  "rate": 0.035 },
+          { "min": 80000,  "max": 150000, "rate": 0.05525 },
+          { "min": 150000, "max": 500000, "rate": 0.0637 },
+          { "min": 500000, "max": 1000000,"rate": 0.0897 },
+          { "min": 1000000,"max": null,   "rate": 0.1075 }
+        ],
+        "mfs": [
+          { "min": 0,      "max": 20000,  "rate": 0.014 },
+          { "min": 20000,  "max": 35000,  "rate": 0.0175 },
+          { "min": 35000,  "max": 40000,  "rate": 0.035 },
+          { "min": 40000,  "max": 75000,  "rate": 0.05525 },
+          { "min": 75000,  "max": 500000, "rate": 0.0637 },
+          { "min": 500000, "max": null,   "rate": 0.0897 }
+        ],
+        "hoh": [
+          { "min": 0,      "max": 20000,  "rate": 0.014 },
+          { "min": 20000,  "max": 50000,  "rate": 0.0175 },
+          { "min": 50000,  "max": 70000,  "rate": 0.0245 },
+          { "min": 70000,  "max": 80000,  "rate": 0.035 },
+          { "min": 80000,  "max": 150000, "rate": 0.05525 },
+          { "min": 150000, "max": 500000, "rate": 0.0637 },
+          { "min": 500000, "max": null,   "rate": 0.0897 }
+        ]
+      }
+    },
+    "NM": {
+      "name": "New Mexico",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,      "max": 5500,   "rate": 0.017 },
+          { "min": 5500,   "max": 11000,  "rate": 0.032 },
+          { "min": 11000,  "max": 16000,  "rate": 0.047 },
+          { "min": 16000,  "max": 210000, "rate": 0.049 },
+          { "min": 210000, "max": null,   "rate": 0.059 }
+        ],
+        "mfj": [
+          { "min": 0,      "max": 8000,   "rate": 0.017 },
+          { "min": 8000,   "max": 16000,  "rate": 0.032 },
+          { "min": 16000,  "max": 24000,  "rate": 0.047 },
+          { "min": 24000,  "max": 315000, "rate": 0.049 },
+          { "min": 315000, "max": null,   "rate": 0.059 }
+        ],
+        "mfs": [
+          { "min": 0,      "max": 5500,   "rate": 0.017 },
+          { "min": 5500,   "max": 11000,  "rate": 0.032 },
+          { "min": 11000,  "max": 16000,  "rate": 0.047 },
+          { "min": 16000,  "max": 157500, "rate": 0.049 },
+          { "min": 157500, "max": null,   "rate": 0.059 }
+        ],
+        "hoh": [
+          { "min": 0,      "max": 8000,   "rate": 0.017 },
+          { "min": 8000,   "max": 16000,  "rate": 0.032 },
+          { "min": 16000,  "max": 24000,  "rate": 0.047 },
+          { "min": 24000,  "max": 315000, "rate": 0.049 },
+          { "min": 315000, "max": null,   "rate": 0.059 }
+        ]
+      }
+    },
+    "NY": {
+      "name": "New York",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,       "max": 17150,  "rate": 0.04 },
+          { "min": 17150,   "max": 23600,  "rate": 0.045 },
+          { "min": 23600,   "max": 27900,  "rate": 0.0525 },
+          { "min": 27900,   "max": 161550, "rate": 0.0585 },
+          { "min": 161550,  "max": 323200, "rate": 0.0625 },
+          { "min": 323200,  "max": 2155350,"rate": 0.0685 },
+          { "min": 2155350, "max": 5000000,"rate": 0.0965 },
+          { "min": 5000000, "max": 25000000,"rate": 0.103 },
+          { "min": 25000000,"max": null,   "rate": 0.109 }
+        ],
+        "mfj": [
+          { "min": 0,       "max": 27900,  "rate": 0.04 },
+          { "min": 27900,   "max": 43000,  "rate": 0.045 },
+          { "min": 43000,   "max": 161550, "rate": 0.0525 },
+          { "min": 161550,  "max": 323200, "rate": 0.0585 },
+          { "min": 323200,  "max": 2155350,"rate": 0.0625 },
+          { "min": 2155350, "max": 5000000,"rate": 0.0685 },
+          { "min": 5000000, "max": 25000000,"rate": 0.103 },
+          { "min": 25000000,"max": null,   "rate": 0.109 }
+        ],
+        "mfs": [
+          { "min": 0,       "max": 17150,  "rate": 0.04 },
+          { "min": 17150,   "max": 23600,  "rate": 0.045 },
+          { "min": 23600,   "max": 27900,  "rate": 0.0525 },
+          { "min": 27900,   "max": 161550, "rate": 0.0585 },
+          { "min": 161550,  "max": 323200, "rate": 0.0625 },
+          { "min": 323200,  "max": 2155350,"rate": 0.0685 },
+          { "min": 2155350, "max": null,   "rate": 0.0965 }
+        ],
+        "hoh": [
+          { "min": 0,       "max": 17650,  "rate": 0.04 },
+          { "min": 17650,   "max": 23600,  "rate": 0.045 },
+          { "min": 23600,   "max": 27900,  "rate": 0.0525 },
+          { "min": 27900,   "max": 161550, "rate": 0.0585 },
+          { "min": 161550,  "max": 323200, "rate": 0.0625 },
+          { "min": 323200,  "max": 2155350,"rate": 0.0685 },
+          { "min": 2155350, "max": null,   "rate": 0.0965 }
+        ]
+      }
+    },
+    "OH": {
+      "name": "Ohio",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,      "max": 26050, "rate": 0.00 },
+          { "min": 26050,  "max": 100000,"rate": 0.0275 },
+          { "min": 100000, "max": null,  "rate": 0.0399 }
+        ],
+        "mfj": [
+          { "min": 0,      "max": 26050, "rate": 0.00 },
+          { "min": 26050,  "max": 100000,"rate": 0.0275 },
+          { "min": 100000, "max": null,  "rate": 0.0399 }
+        ],
+        "mfs": [
+          { "min": 0,      "max": 26050, "rate": 0.00 },
+          { "min": 26050,  "max": 100000,"rate": 0.0275 },
+          { "min": 100000, "max": null,  "rate": 0.0399 }
+        ],
+        "hoh": [
+          { "min": 0,      "max": 26050, "rate": 0.00 },
+          { "min": 26050,  "max": 100000,"rate": 0.0275 },
+          { "min": 100000, "max": null,  "rate": 0.0399 }
+        ]
+      }
+    },
+    "OK": {
+      "name": "Oklahoma",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 1000,  "rate": 0.0025 },
+          { "min": 1000,  "max": 2500,  "rate": 0.0075 },
+          { "min": 2500,  "max": 3750,  "rate": 0.0175 },
+          { "min": 3750,  "max": 4900,  "rate": 0.0275 },
+          { "min": 4900,  "max": 7200,  "rate": 0.0375 },
+          { "min": 7200,  "max": null,  "rate": 0.0475 }
+        ],
+        "mfj": [
+          { "min": 0,     "max": 2000,  "rate": 0.0025 },
+          { "min": 2000,  "max": 5000,  "rate": 0.0075 },
+          { "min": 5000,  "max": 7500,  "rate": 0.0175 },
+          { "min": 7500,  "max": 9800,  "rate": 0.0275 },
+          { "min": 9800,  "max": 12200, "rate": 0.0375 },
+          { "min": 12200, "max": null,  "rate": 0.0475 }
+        ],
+        "mfs": [
+          { "min": 0,     "max": 1000,  "rate": 0.0025 },
+          { "min": 1000,  "max": 2500,  "rate": 0.0075 },
+          { "min": 2500,  "max": 3750,  "rate": 0.0175 },
+          { "min": 3750,  "max": 4900,  "rate": 0.0275 },
+          { "min": 4900,  "max": 7200,  "rate": 0.0375 },
+          { "min": 7200,  "max": null,  "rate": 0.0475 }
+        ],
+        "hoh": [
+          { "min": 0,     "max": 1000,  "rate": 0.0025 },
+          { "min": 1000,  "max": 2500,  "rate": 0.0075 },
+          { "min": 2500,  "max": 3750,  "rate": 0.0175 },
+          { "min": 3750,  "max": 4900,  "rate": 0.0275 },
+          { "min": 4900,  "max": 7200,  "rate": 0.0375 },
+          { "min": 7200,  "max": null,  "rate": 0.0475 }
+        ]
+      }
+    },
+    "OR": {
+      "name": "Oregon",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,      "max": 4050,   "rate": 0.0475 },
+          { "min": 4050,   "max": 10200,  "rate": 0.0675 },
+          { "min": 10200,  "max": 125000, "rate": 0.0875 },
+          { "min": 125000, "max": null,   "rate": 0.099 }
+        ],
+        "mfj": [
+          { "min": 0,      "max": 8100,   "rate": 0.0475 },
+          { "min": 8100,   "max": 20400,  "rate": 0.0675 },
+          { "min": 20400,  "max": 250000, "rate": 0.0875 },
+          { "min": 250000, "max": null,   "rate": 0.099 }
+        ],
+        "mfs": [
+          { "min": 0,      "max": 4050,   "rate": 0.0475 },
+          { "min": 4050,   "max": 10200,  "rate": 0.0675 },
+          { "min": 10200,  "max": 125000, "rate": 0.0875 },
+          { "min": 125000, "max": null,   "rate": 0.099 }
+        ],
+        "hoh": [
+          { "min": 0,      "max": 6075,   "rate": 0.0475 },
+          { "min": 6075,   "max": 15300,  "rate": 0.0675 },
+          { "min": 15300,  "max": 187500, "rate": 0.0875 },
+          { "min": 187500, "max": null,   "rate": 0.099 }
+        ]
+      }
+    },
+    "RI": {
+      "name": "Rhode Island",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,      "max": 77450,  "rate": 0.0375 },
+          { "min": 77450,  "max": 176050, "rate": 0.0475 },
+          { "min": 176050, "max": null,   "rate": 0.0599 }
+        ],
+        "mfj": [
+          { "min": 0,      "max": 77450,  "rate": 0.0375 },
+          { "min": 77450,  "max": 176050, "rate": 0.0475 },
+          { "min": 176050, "max": null,   "rate": 0.0599 }
+        ],
+        "mfs": [
+          { "min": 0,      "max": 38725,  "rate": 0.0375 },
+          { "min": 38725,  "max": 88025,  "rate": 0.0475 },
+          { "min": 88025,  "max": null,   "rate": 0.0599 }
+        ],
+        "hoh": [
+          { "min": 0,      "max": 77450,  "rate": 0.0375 },
+          { "min": 77450,  "max": 176050, "rate": 0.0475 },
+          { "min": 176050, "max": null,   "rate": 0.0599 }
+        ]
+      }
+    },
+    "VA": {
+      "name": "Virginia",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 3000,  "rate": 0.02 },
+          { "min": 3000,  "max": 5000,  "rate": 0.03 },
+          { "min": 5000,  "max": 17000, "rate": 0.05 },
+          { "min": 17000, "max": null,  "rate": 0.0575 }
+        ],
+        "mfj": [
+          { "min": 0,     "max": 3000,  "rate": 0.02 },
+          { "min": 3000,  "max": 5000,  "rate": 0.03 },
+          { "min": 5000,  "max": 17000, "rate": 0.05 },
+          { "min": 17000, "max": null,  "rate": 0.0575 }
+        ],
+        "mfs": [
+          { "min": 0,     "max": 3000,  "rate": 0.02 },
+          { "min": 3000,  "max": 5000,  "rate": 0.03 },
+          { "min": 5000,  "max": 17000, "rate": 0.05 },
+          { "min": 17000, "max": null,  "rate": 0.0575 }
+        ],
+        "hoh": [
+          { "min": 0,     "max": 3000,  "rate": 0.02 },
+          { "min": 3000,  "max": 5000,  "rate": 0.03 },
+          { "min": 5000,  "max": 17000, "rate": 0.05 },
+          { "min": 17000, "max": null,  "rate": 0.0575 }
+        ]
+      }
+    },
+    "VT": {
+      "name": "Vermont",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,      "max": 47450, "rate": 0.0335 },
+          { "min": 47450,  "max": 113300,"rate": 0.066 },
+          { "min": 113300, "max": 231500,"rate": 0.076 },
+          { "min": 231500, "max": null,  "rate": 0.0875 }
+        ],
+        "mfj": [
+          { "min": 0,      "max": 79600, "rate": 0.0335 },
+          { "min": 79600,  "max": 189600,"rate": 0.066 },
+          { "min": 189600, "max": 293400,"rate": 0.076 },
+          { "min": 293400, "max": null,  "rate": 0.0875 }
+        ],
+        "mfs": [
+          { "min": 0,      "max": 39800, "rate": 0.0335 },
+          { "min": 39800,  "max": 94800, "rate": 0.066 },
+          { "min": 94800,  "max": 146700,"rate": 0.076 },
+          { "min": 146700, "max": null,  "rate": 0.0875 }
+        ],
+        "hoh": [
+          { "min": 0,      "max": 63750, "rate": 0.0335 },
+          { "min": 63750,  "max": 163050,"rate": 0.066 },
+          { "min": 163050, "max": 262450,"rate": 0.076 },
+          { "min": 262450, "max": null,  "rate": 0.0875 }
+        ]
+      }
+    },
+    "WI": {
+      "name": "Wisconsin",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,      "max": 14320, "rate": 0.035 },
+          { "min": 14320,  "max": 28640, "rate": 0.044 },
+          { "min": 28640,  "max": 315310,"rate": 0.053 },
+          { "min": 315310, "max": null,  "rate": 0.0765 }
+        ],
+        "mfj": [
+          { "min": 0,      "max": 19090, "rate": 0.035 },
+          { "min": 19090,  "max": 38190, "rate": 0.044 },
+          { "min": 38190,  "max": 420420,"rate": 0.053 },
+          { "min": 420420, "max": null,  "rate": 0.0765 }
+        ],
+        "mfs": [
+          { "min": 0,      "max": 9545,  "rate": 0.035 },
+          { "min": 9545,   "max": 19095, "rate": 0.044 },
+          { "min": 19095,  "max": 210210,"rate": 0.053 },
+          { "min": 210210, "max": null,  "rate": 0.0765 }
+        ],
+        "hoh": [
+          { "min": 0,      "max": 14320, "rate": 0.035 },
+          { "min": 14320,  "max": 28640, "rate": 0.044 },
+          { "min": 28640,  "max": 315310,"rate": 0.053 },
+          { "min": 315310, "max": null,  "rate": 0.0765 }
+        ]
+      }
+    },
+    "WV": {
+      "name": "West Virginia",
+      "type": "graduated",
+      "distinguishesLongTerm": false,
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 10000, "rate": 0.03 },
+          { "min": 10000, "max": 25000, "rate": 0.04 },
+          { "min": 25000, "max": 40000, "rate": 0.045 },
+          { "min": 40000, "max": 60000, "rate": 0.06 },
+          { "min": 60000, "max": null,  "rate": 0.065 }
+        ],
+        "mfj": [
+          { "min": 0,     "max": 10000, "rate": 0.03 },
+          { "min": 10000, "max": 25000, "rate": 0.04 },
+          { "min": 25000, "max": 40000, "rate": 0.045 },
+          { "min": 40000, "max": 60000, "rate": 0.06 },
+          { "min": 60000, "max": null,  "rate": 0.065 }
+        ],
+        "mfs": [
+          { "min": 0,     "max": 10000, "rate": 0.03 },
+          { "min": 10000, "max": 25000, "rate": 0.04 },
+          { "min": 25000, "max": 40000, "rate": 0.045 },
+          { "min": 40000, "max": 60000, "rate": 0.06 },
+          { "min": 60000, "max": null,  "rate": 0.065 }
+        ],
+        "hoh": [
+          { "min": 0,     "max": 10000, "rate": 0.03 },
+          { "min": 10000, "max": 25000, "rate": 0.04 },
+          { "min": 25000, "max": 40000, "rate": 0.045 },
+          { "min": 40000, "max": 60000, "rate": 0.06 },
+          { "min": 60000, "max": null,  "rate": 0.065 }
+        ]
+      }
+    }
+  },
+  "cities": {
+    "NYC": {
+      "name": "New York City",
+      "state": "NY",
+      "residentOnly": false,
+      "nonResidentRate": null,
+      "appliesTo": ["shortTerm", "longTerm"],
+      "type": "graduated",
+      "brackets": {
+        "single": [
+          { "min": 0,     "max": 12000, "rate": 0.03078 },
+          { "min": 12000, "max": 25000, "rate": 0.03762 },
+          { "min": 25000, "max": 50000, "rate": 0.03819 },
+          { "min": 50000, "max": null,  "rate": 0.03876 }
+        ],
+        "mfj": [
+          { "min": 0,     "max": 21600, "rate": 0.03078 },
+          { "min": 21600, "max": 45000, "rate": 0.03762 },
+          { "min": 45000, "max": 90000, "rate": 0.03819 },
+          { "min": 90000, "max": null,  "rate": 0.03876 }
+        ]
+      }
+    },
+    "YONKERS": {
+      "name": "Yonkers",
+      "state": "NY",
+      "residentOnly": false,
+      "nonResidentRate": 0.005,
+      "appliesTo": ["shortTerm", "longTerm"],
+      "type": "surcharge",
+      "surchargeRate": 0.016752
+    },
+    "PHL": {
+      "name": "Philadelphia",
+      "state": "PA",
+      "residentOnly": false,
+      "nonResidentRate": 0.035,
+      "appliesTo": ["shortTerm", "longTerm"],
+      "type": "flat",
+      "rate": 0.0375
+    },
+    "PIT": {
+      "name": "Pittsburgh",
+      "state": "PA",
+      "residentOnly": true,
+      "nonResidentRate": null,
+      "appliesTo": ["shortTerm", "longTerm"],
+      "type": "flat",
+      "rate": 0.03
+    },
+    "DET": {
+      "name": "Detroit",
+      "state": "MI",
+      "residentOnly": false,
+      "nonResidentRate": 0.012,
+      "appliesTo": ["shortTerm", "longTerm"],
+      "type": "flat",
+      "rate": 0.024
+    },
+    "CMH": {
+      "name": "Columbus",
+      "state": "OH",
+      "residentOnly": false,
+      "nonResidentRate": 0.025,
+      "appliesTo": ["shortTerm", "longTerm"],
+      "type": "flat",
+      "rate": 0.025
+    },
+    "CLE": {
+      "name": "Cleveland",
+      "state": "OH",
+      "residentOnly": false,
+      "nonResidentRate": 0.025,
+      "appliesTo": ["shortTerm", "longTerm"],
+      "type": "flat",
+      "rate": 0.025
+    },
+    "CVG": {
+      "name": "Cincinnati",
+      "state": "OH",
+      "residentOnly": false,
+      "nonResidentRate": 0.018,
+      "appliesTo": ["shortTerm", "longTerm"],
+      "type": "flat",
+      "rate": 0.018
+    },
+    "TOL": {
+      "name": "Toledo",
+      "state": "OH",
+      "residentOnly": false,
+      "nonResidentRate": 0.025,
+      "appliesTo": ["shortTerm", "longTerm"],
+      "type": "flat",
+      "rate": 0.025
+    },
+    "CAK": {
+      "name": "Akron",
+      "state": "OH",
+      "residentOnly": false,
+      "nonResidentRate": 0.025,
+      "appliesTo": ["shortTerm", "longTerm"],
+      "type": "flat",
+      "rate": 0.025
+    },
+    "BWI": {
+      "name": "Baltimore",
+      "state": "MD",
+      "residentOnly": true,
+      "nonResidentRate": null,
+      "appliesTo": ["shortTerm", "longTerm"],
+      "type": "flat",
+      "rate": 0.032
+    },
+    "MCI": {
+      "name": "Kansas City",
+      "state": "MO",
+      "residentOnly": false,
+      "nonResidentRate": 0.01,
+      "appliesTo": ["shortTerm", "longTerm"],
+      "type": "flat",
+      "rate": 0.01
+    },
+    "STL": {
+      "name": "St. Louis",
+      "state": "MO",
+      "residentOnly": false,
+      "nonResidentRate": 0.01,
+      "appliesTo": ["shortTerm", "longTerm"],
+      "type": "flat",
+      "rate": 0.01
+    }
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "version": "2026.Q1",
+  "updatedAt": "2026-01-15",
+  "sectors": [
+    {
+      "key": "technology",
+      "name": "Technology",
+      "color": "#4A9EFF",
+      "industries": [
+        "Software",
+        "Semiconductors",
+        "Hardware",
+        "Cloud Services",
+        "Cybersecurity",
+        "Artificial Intelligence",
+        "Networking",
+        "IT Services"
+      ]
+    },
+    {
+      "key": "healthcare",
+      "name": "Healthcare",
+      "color": "#4ACA74",
+      "industries": [
+        "Pharmaceuticals",
+        "Biotechnology",
+        "Medical Devices",
+        "Health Insurance",
+        "Hospital Systems",
+        "Diagnostics"
+      ]
+    },
+    {
+      "key": "financials",
+      "name": "Financials",
+      "color": "#FFD84A",
+      "industries": [
+        "Banking",
+        "Investment Banking",
+        "Asset Management",
+        "Insurance",
+        "Payments",
+        "Fintech",
+        "REITs"
+      ]
+    },
+    {
+      "key": "consumer_discretionary",
+      "name": "Consumer Discretionary",
+      "color": "#FF6B6B",
+      "industries": [
+        "E-Commerce",
+        "Retail",
+        "Automotive",
+        "Entertainment",
+        "Restaurants",
+        "Travel & Leisure",
+        "Apparel"
+      ]
+    },
+    {
+      "key": "consumer_staples",
+      "name": "Consumer Staples",
+      "color": "#A8D8A8",
+      "industries": [
+        "Food & Beverage",
+        "Household Products",
+        "Personal Care",
+        "Tobacco",
+        "Grocery"
+      ]
+    },
+    {
+      "key": "industrials",
+      "name": "Industrials",
+      "color": "#B8A9C9",
+      "industries": [
+        "Aerospace & Defense",
+        "Manufacturing",
+        "Transportation",
+        "Logistics",
+        "Construction",
+        "Engineering"
+      ]
+    },
+    {
+      "key": "energy",
+      "name": "Energy",
+      "color": "#FFB84A",
+      "industries": [
+        "Oil & Gas",
+        "Renewable Energy",
+        "Utilities",
+        "Nuclear",
+        "Coal"
+      ]
+    },
+    {
+      "key": "utilities",
+      "name": "Utilities",
+      "color": "#7EC8E3",
+      "industries": [
+        "Electric Utilities",
+        "Gas Utilities",
+        "Water Utilities",
+        "Multi-Utilities"
+      ]
+    },
+    {
+      "key": "real_estate",
+      "name": "Real Estate",
+      "color": "#D4A5A5",
+      "industries": [
+        "Residential REITs",
+        "Commercial REITs",
+        "Industrial REITs",
+        "Data Center REITs",
+        "Real Estate Services"
+      ]
+    },
+    {
+      "key": "materials",
+      "name": "Materials",
+      "color": "#C8B89A",
+      "industries": [
+        "Metals & Mining",
+        "Chemicals",
+        "Paper & Packaging",
+        "Construction Materials"
+      ]
+    },
+    {
+      "key": "communication_services",
+      "name": "Communication Services",
+      "color": "#9A8EC8",
+      "industries": [
+        "Social Media",
+        "Streaming",
+        "Telecom",
+        "Advertising",
+        "Gaming"
+      ]
+    },
+    {
+      "key": "crypto",
+      "name": "Crypto",
+      "color": "#F7931A",
+      "industries": [
+        "Layer 1",
+        "Layer 2",
+        "DeFi",
+        "Stablecoins",
+        "NFT & Gaming",
+        "Infrastructure"
+      ]
+    },
+    {
+      "key": "other",
+      "name": "Other",
+      "color": "#888888",
+      "industries": [
+        "Conglomerates",
+        "Special Purpose",
+        "Uncategorized"
+      ]
+    }
+  ]
+}
