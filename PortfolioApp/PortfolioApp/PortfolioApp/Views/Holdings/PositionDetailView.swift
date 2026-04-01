@@ -12,14 +12,17 @@ struct PositionDetailView: View {
     @FetchRequest private var lots: FetchedResults<Lot>
     @FetchRequest private var closedLots: FetchedResults<Lot>
     @FetchRequest private var transactions: FetchedResults<Transaction>
+    @FetchRequest private var dividendEvents: FetchedResults<DividendEvent>
 
-    @State private var showAddLot        = false
-    @State private var showSellPosition  = false
-    @State private var showDepositCash   = false
-    @State private var showWithdrawCash  = false
-    @State private var lotsCollapsed        = true
-    @State private var transactionsCollapsed = true
-    @State private var closedLotsCollapsed   = true
+    @State private var showAddLot          = false
+    @State private var showSellPosition    = false
+    @State private var showDepositCash     = false
+    @State private var showWithdrawCash    = false
+    @State private var showAddDividend     = false
+    @State private var lotsCollapsed          = true
+    @State private var transactionsCollapsed  = true
+    @State private var closedLotsCollapsed    = true
+    @State private var dividendsCollapsed     = true
     @State private var lotToEdit:   Lot?
     @State private var lotToSell:   Lot?
     @State private var lotToDelete: Lot?
@@ -36,6 +39,7 @@ struct PositionDetailView: View {
         _lots = FetchRequest(fetchRequest: Lot.openLots(for: holding.id), animation: .default)
         _closedLots = FetchRequest(fetchRequest: Lot.closedLots(for: holding.id), animation: .default)
         _transactions = FetchRequest(fetchRequest: Transaction.activeTransactions(for: holding.id), animation: .default)
+        _dividendEvents = FetchRequest(fetchRequest: DividendEvent.forHolding(holding.id), animation: .default)
     }
 
     // MARK: - Computed
@@ -58,7 +62,10 @@ struct PositionDetailView: View {
     }
 
     private var priceData: PriceData? {
-        priceService.price(for: holding.symbol)
+        // Options: symbol is the underlying (e.g. "ANET"), not an option contract.
+        // Showing the stock price as option price/P&L is misleading — suppress it.
+        guard !holding.isOption else { return nil }
+        return priceService.price(for: holding.symbol)
     }
 
     private var currentPrice: Decimal? { priceData?.currentPrice }
@@ -83,6 +90,19 @@ struct PositionDetailView: View {
     private var unrealizedPnLPercent: Decimal? {
         guard let pnl = unrealizedPnL, totalCostBasis > 0 else { return nil }
         return ((pnl / totalCostBasis) * 100).rounded(to: 2)
+    }
+
+    private var dividendYieldPercent: Decimal? {
+        guard let price = currentPrice else { return nil }
+        return DividendService.shared.annualYieldPercent(
+            holding: holding,
+            openQty: totalQty,
+            currentPrice: price
+        )
+    }
+
+    private var dividendYTD: Decimal {
+        DividendService.shared.totalDividendsYTD(events: Array(dividendEvents))
     }
 
     /// Computes a tax estimate for selling a lot at the current price.
@@ -133,6 +153,9 @@ struct PositionDetailView: View {
                         .environmentObject(taxProfileManager)
                     summaryCard
                     lotsCard
+                    if !dividendEvents.isEmpty {
+                        dividendHistoryCard
+                    }
                     if !transactions.isEmpty {
                         transactionHistoryCard
                     }
@@ -184,6 +207,15 @@ struct PositionDetailView: View {
                                     .foregroundColor(.appRed)
                             }
                         }
+                        if holding.assetType == .stock || holding.assetType == .etf || holding.assetType == .crypto {
+                            Button {
+                                showAddDividend = true
+                            } label: {
+                                Image(systemName: "dollarsign.circle")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundColor(.appGold)
+                            }
+                        }
                         Button {
                             showAddLot = true
                         } label: {
@@ -201,6 +233,10 @@ struct PositionDetailView: View {
         }
         .sheet(isPresented: $showWithdrawCash) {
             WithdrawCashView(availableBalance: openLots.reduce(0) { $0 + $1.remainingQty })
+                .environment(\.managedObjectContext, context)
+        }
+        .sheet(isPresented: $showAddDividend) {
+            AddDividendView(holding: holding)
                 .environment(\.managedObjectContext, context)
         }
         .sheet(isPresented: $showAddLot) {
@@ -368,7 +404,11 @@ struct PositionDetailView: View {
                     } else {
                         statTile(label: "PRICE", value: currentPrice?.asCurrency ?? "—")
                         statTile(label: "AVG COST", value: avgCostPerShare.asCurrency)
-                        statTile(label: "SHARES", value: totalQty.asQuantity(maxDecimalPlaces: 4))
+                        if let yieldPct = dividendYieldPercent {
+                            statTile(label: "YIELD", value: "\(yieldPct.asPercent(decimalPlaces: 2))%")
+                        } else {
+                            statTile(label: "SHARES", value: totalQty.asQuantity(maxDecimalPlaces: 4))
+                        }
                     }
                 }
 
@@ -497,6 +537,48 @@ struct PositionDetailView: View {
                     .padding(.top, 2)
             }
             } // end if !lotsCollapsed
+        }
+    }
+
+    // MARK: - Dividend History Card
+
+    private var dividendHistoryCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { dividendsCollapsed.toggle() }
+            } label: {
+                HStack {
+                    Text("DIVIDENDS")
+                        .sectionTitleStyle()
+                    Spacer()
+                    if dividendYTD > 0 {
+                        Text("\(dividendYTD.asCurrency) YTD")
+                            .font(AppFont.mono(10))
+                            .foregroundColor(.appGold)
+                    }
+                    Text("\(dividendEvents.count)")
+                        .font(AppFont.mono(10))
+                        .foregroundColor(.textMuted)
+                    Image(systemName: dividendsCollapsed ? "chevron.down" : "chevron.up")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.textMuted)
+                        .padding(.leading, 4)
+                }
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 4)
+
+            if !dividendsCollapsed {
+                VStack(spacing: 0) {
+                    ForEach(Array(dividendEvents.enumerated()), id: \.element.id) { index, event in
+                        DividendEventRowView(event: event)
+                        if index < dividendEvents.count - 1 {
+                            Divider().background(Color.appBorder)
+                        }
+                    }
+                }
+                .cardStyle()
+            }
         }
     }
 
@@ -911,6 +993,51 @@ struct TransactionRowView: View {
                     .foregroundColor(.textPrimary)
                 if transaction.fee > 0 {
                     Text("fee \(transaction.fee.asCurrency)")
+                        .font(AppFont.mono(10))
+                        .foregroundColor(.textMuted)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+}
+
+// MARK: - Dividend Event Row View
+
+struct DividendEventRowView: View {
+    let event: DividendEvent
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Type badge
+            Text(event.isReinvested ? "DRIP" : "DIV")
+                .font(AppFont.mono(10, weight: .bold))
+                .foregroundColor(event.isReinvested ? .appGold : .appGreen)
+                .frame(width: 34)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(event.payDate.formatted(.dateTime.month(.abbreviated).day().year()))
+                    .font(AppFont.mono(12, weight: .bold))
+                    .foregroundColor(.textPrimary)
+                Text("\(event.dividendPerShare.asCurrency)/share × \(event.sharesHeld.asQuantity(maxDecimalPlaces: 4))")
+                    .font(AppFont.mono(11))
+                    .foregroundColor(.textSub)
+                if event.isReinvested && event.reinvestedShares > 0 {
+                    Text("\(event.reinvestedShares.asQuantity(maxDecimalPlaces: 6)) shares @ \(event.reinvestedPricePerShare.asCurrency)")
+                        .font(AppFont.mono(10))
+                        .foregroundColor(.appGold)
+                }
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(event.grossAmount.asCurrency)
+                    .font(AppFont.mono(12, weight: .semibold))
+                    .foregroundColor(event.isReinvested ? .appGold : .appGreen)
+                if let exDiv = event.exDividendDate {
+                    Text("ex \(exDiv.formatted(.dateTime.month(.abbreviated).day()))")
                         .font(AppFont.mono(10))
                         .foregroundColor(.textMuted)
                 }

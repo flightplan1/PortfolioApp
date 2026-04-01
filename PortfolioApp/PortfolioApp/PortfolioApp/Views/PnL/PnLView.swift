@@ -69,6 +69,10 @@ struct PnLView: View {
     @FetchRequest(sortDescriptors: [])
     private var allLots: FetchedResults<Lot>
 
+    // Dividend events this year — for dividend income stat
+    @FetchRequest(fetchRequest: DividendEvent.forYear(Calendar.current.component(.year, from: Date())))
+    private var dividendsThisYear: FetchedResults<DividendEvent>
+
     @State private var selectedRange: TimeRange = .oneMonth
     @State private var chartData: [PortfolioDataPoint] = []
     @State private var selectedDate: Date?
@@ -90,8 +94,9 @@ struct PnLView: View {
 
     private var totalPortfolioValue: Decimal {
         allOpenLots.reduce(Decimal(0)) { sum, lot in
-            guard let h = holdingMap[lot.holdingId], h.assetType != .cash,
-                  let price = priceService.currentPrice(for: h.symbol) else { return sum }
+            guard let h = holdingMap[lot.holdingId], h.assetType != .cash else { return sum }
+            if h.isOption { return sum + lot.totalCostBasis }
+            guard let price = priceService.currentPrice(for: h.symbol) else { return sum }
             return sum + lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
         }
     }
@@ -113,6 +118,7 @@ struct PnLView: View {
     private var todayChange: Decimal {
         allOpenLots.reduce(Decimal(0)) { sum, lot in
             guard let h = holdingMap[lot.holdingId], h.assetType != .cash,
+                  !h.isOption,
                   let change = priceService.dailyChange(for: h.symbol) else { return sum }
             return sum + (lot.remainingQty * change * h.lotMultiplier * h.pnlDirection).rounded(to: 2)
         }
@@ -152,6 +158,10 @@ struct PnLView: View {
         let basis = realizedPnLStats.soldCostBasis
         guard basis > 0 else { return nil }
         return (realizedPnLStats.pnl / basis * 100).rounded(to: 2)
+    }
+
+    private var dividendIncomeYTD: Decimal {
+        dividendsThisYear.reduce(0) { $0 + $1.grossAmount }
     }
 
     // MARK: - Tax Year Summary
@@ -350,7 +360,15 @@ struct PnLView: View {
     private var holdingRows: [HoldingPnLRow] {
         holdings.compactMap { h -> HoldingPnLRow? in
             let lots = allOpenLots.filter { $0.holdingId == h.id }
-            guard !lots.isEmpty, let price = priceService.currentPrice(for: h.symbol) else { return nil }
+            guard !lots.isEmpty else { return nil }
+            // Options: no live contract price on free tier — show at cost basis, $0 unrealized P&L
+            if h.isOption {
+                let costBasis = lots.reduce(Decimal(0)) { $0 + $1.totalCostBasis }
+                return HoldingPnLRow(id: h.id, symbol: h.symbol, name: h.name,
+                                     assetType: h.assetType, marketValue: costBasis,
+                                     unrealizedPnL: 0, unrealizedPct: 0, todayChangePct: 0)
+            }
+            guard let price = priceService.currentPrice(for: h.symbol) else { return nil }
             let m       = h.lotMultiplier
             let dir     = h.pnlDirection
             let mv      = lots.reduce(Decimal(0)) { $0 + $1.equityContribution(at: price, multiplier: m, pnlDirection: dir) }
@@ -905,11 +923,15 @@ struct PnLView: View {
             .padding(.top, 20)
             .padding(.bottom, 12)
 
-            // LT / ST breakdown
+            // LT / ST / Dividend breakdown
             HStack(spacing: 0) {
                 taxSummaryColumn(label: "LT Gains", value: ltRealizedPnL, color: .appGreen)
                 Divider().background(Color.appBorder).frame(width: 1)
                 taxSummaryColumn(label: "ST Gains", value: stRealizedPnL, color: .appGold)
+                if dividendIncomeYTD > 0 {
+                    Divider().background(Color.appBorder).frame(width: 1)
+                    taxSummaryColumn(label: "Dividends", value: dividendIncomeYTD, color: .appBlue)
+                }
             }
             .frame(height: 62)
             .background(Color.appBg)
@@ -1061,10 +1083,14 @@ struct PnLView: View {
             let today = Date()
             let rangeStart = Calendar.current.date(byAdding: .day, value: -days, to: today) ?? today
             let currentValue = nonCashLots.reduce(0.0) { sum, lot in
-                guard let h = map[lot.holdingId],
-                      let price = priceService.currentPrice(for: h.symbol) else { return sum }
+                guard let h = map[lot.holdingId] else { return sum }
+                // Options: carry at cost basis (no live option price on free tier)
+                if h.isOption {
+                    return sum + Double(truncating: lot.totalCostBasis as NSDecimalNumber)
+                }
+                guard let price = priceService.currentPrice(for: h.symbol) else { return sum }
                 let qty        = Double(truncating: lot.remainingQty as NSDecimalNumber)
-                let multiplier = h.isOption ? 100.0 : 1.0
+                let multiplier = 1.0
                 if h.isShortPosition {
                     let cb = Double(truncating: lot.splitAdjustedCostBasisPerShare as NSDecimalNumber)
                     return sum + (cb - Double(truncating: price as NSDecimalNumber)) * qty * multiplier
@@ -1094,17 +1120,19 @@ struct PnLView: View {
         let map = holdingMap
         let points: [PortfolioDataPoint] = allDates.map { date in
             let value = allOpenLots.reduce(0.0) { sum, lot in
-                guard let h = map[lot.holdingId], h.assetType != .cash,
-                      let history = priceHistory[h.symbol.uppercased()],
+                guard let h = map[lot.holdingId], h.assetType != .cash else { return sum }
+                // Options: carry at cost basis in the chart — no option price history on free tier
+                if h.isOption {
+                    return sum + Double(truncating: lot.totalCostBasis as NSDecimalNumber)
+                }
+                guard let history = priceHistory[h.symbol.uppercased()],
                       let price = history.price(on: date) else { return sum }
                 let qty = Double(truncating: lot.remainingQty as NSDecimalNumber)
-                let multiplier: Double = h.isOption ? 100 : 1
                 let costBasis = Double(truncating: lot.splitAdjustedCostBasisPerShare as NSDecimalNumber)
                 if h.isShortPosition {
-                    // Short: net equity = (costBasis − currentPrice) × qty × 100
-                    return sum + (costBasis - price) * qty * multiplier
+                    return sum + (costBasis - price) * qty
                 }
-                return sum + qty * price * multiplier
+                return sum + qty * price
             }
             return PortfolioDataPoint(date: date, value: value)
         }

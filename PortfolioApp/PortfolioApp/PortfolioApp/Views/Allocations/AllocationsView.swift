@@ -27,8 +27,9 @@ struct AllocationsView: View {
 
     private var totalPortfolioValue: Decimal {
         allOpenLots.reduce(Decimal(0)) { sum, lot in
-            guard let h = holdingMap[lot.holdingId],
-                  let price = priceService.currentPrice(for: h.symbol) else { return sum }
+            guard let h = holdingMap[lot.holdingId] else { return sum }
+            if h.isOption { return sum + lot.totalCostBasis }
+            guard let price = priceService.currentPrice(for: h.symbol) else { return sum }
             return sum + lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
         }
     }
@@ -38,9 +39,14 @@ struct AllocationsView: View {
     private var assetTypeSlices: [AllocationSlice] {
         var valueByType: [AssetType: Decimal] = [:]
         for lot in allOpenLots {
-            guard let h = holdingMap[lot.holdingId],
-                  let price = priceService.currentPrice(for: h.symbol) else { continue }
-            let contrib = lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
+            guard let h = holdingMap[lot.holdingId] else { continue }
+            let contrib: Decimal
+            if h.isOption {
+                contrib = lot.totalCostBasis
+            } else {
+                guard let price = priceService.currentPrice(for: h.symbol) else { continue }
+                contrib = lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
+            }
             if contrib > 0 { valueByType[h.assetType, default: 0] += contrib }
         }
         let total = valueByType.values.reduce(Decimal(0), +)
@@ -61,9 +67,14 @@ struct AllocationsView: View {
     private var sectorSlices: [SectorSlice] {
         var valueBySetor: [String: Decimal] = [:]
         for lot in allOpenLots {
-            guard let h = holdingMap[lot.holdingId],
-                  let price = priceService.currentPrice(for: h.symbol) else { continue }
-            let contrib = lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
+            guard let h = holdingMap[lot.holdingId] else { continue }
+            let contrib: Decimal
+            if h.isOption {
+                contrib = lot.totalCostBasis
+            } else {
+                guard let price = priceService.currentPrice(for: h.symbol) else { continue }
+                contrib = lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
+            }
             guard contrib > 0 else { continue }
             let sector = (h.sector?.isEmpty == false) ? h.sector! : "Other"
             valueBySetor[sector, default: 0] += contrib
@@ -91,6 +102,7 @@ struct AllocationsView: View {
             let mv = allOpenLots
                 .filter { $0.holdingId == h.id }
                 .reduce(Decimal(0)) { sum, lot in
+                    if h.isOption { return sum + lot.totalCostBasis }
                     guard let price = priceService.currentPrice(for: h.symbol) else { return sum }
                     return sum + lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
                 }

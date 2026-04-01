@@ -48,8 +48,10 @@ struct DashboardView: View {
 
     private var totalPortfolioValue: Decimal {
         allOpenLots.reduce(Decimal(0)) { sum, lot in
-            guard let h = holdingMap[lot.holdingId],
-                  let price = priceService.currentPrice(for: h.symbol) else { return sum }
+            guard let h = holdingMap[lot.holdingId] else { return sum }
+            // Options: no live contract price on free tier — carry at cost basis
+            if h.isOption { return sum + lot.totalCostBasis }
+            guard let price = priceService.currentPrice(for: h.symbol) else { return sum }
             return sum + lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
         }
     }
@@ -64,6 +66,7 @@ struct DashboardView: View {
     private var unrealizedPnL: Decimal {
         allOpenLots.reduce(Decimal(0)) { sum, lot in
             guard let h = holdingMap[lot.holdingId],
+                  !h.isOption,   // no live option prices — exclude from unrealized P&L
                   let price = priceService.currentPrice(for: h.symbol) else { return sum }
             return sum + lot.unrealizedPnL(at: price, multiplier: h.lotMultiplier) * h.pnlDirection
         }
@@ -72,8 +75,8 @@ struct DashboardView: View {
     private var todayChange: Decimal {
         allOpenLots.reduce(Decimal(0)) { sum, lot in
             guard let h = holdingMap[lot.holdingId],
+                  !h.isOption,   // underlying stock daily change ≠ option daily change
                   let change = priceService.dailyChange(for: h.symbol) else { return sum }
-            // Short options: price rising = loss, price falling = gain — so flip change sign
             return sum + (lot.remainingQty * change * h.lotMultiplier * h.pnlDirection).rounded(to: 2)
         }
     }
@@ -133,9 +136,14 @@ struct DashboardView: View {
         var valueByType: [AssetType: Decimal] = [:]
         for lot in allOpenLots {
             guard let h = holdingMap[lot.holdingId] else { continue }
-            // Fall back to cost basis when no live price is available (e.g. options on free Finnhub tier)
-            let price = priceService.currentPrice(for: h.symbol) ?? lot.splitAdjustedCostBasisPerShare
-            let contrib = lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
+            let contrib: Decimal
+            if h.isOption {
+                // Carry options at cost basis — no live contract price on free tier
+                contrib = lot.totalCostBasis
+            } else {
+                let price = priceService.currentPrice(for: h.symbol) ?? lot.splitAdjustedCostBasisPerShare
+                contrib = lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
+            }
             if contrib > 0 { valueByType[h.assetType, default: 0] += contrib }
         }
         let total = valueByType.values.reduce(Decimal(0), +)
@@ -160,6 +168,7 @@ struct DashboardView: View {
             let mv = allOpenLots
                 .filter { $0.holdingId == h.id }
                 .reduce(Decimal(0)) { sum, lot in
+                    if h.isOption { return sum + lot.totalCostBasis }
                     let price = priceService.currentPrice(for: h.symbol) ?? lot.splitAdjustedCostBasisPerShare
                     return sum + lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
                 }
@@ -175,7 +184,8 @@ struct DashboardView: View {
 
     private var topMovers: [MoverItem] {
         holdings.compactMap { h -> MoverItem? in
-            guard let pct = priceService.dailyChangePercent(for: h.symbol),
+            guard !h.isOption,   // options share symbol with underlying — would show stock movement
+                  let pct = priceService.dailyChangePercent(for: h.symbol),
                   let amt = priceService.dailyChange(for: h.symbol) else { return nil }
             return MoverItem(id: h.id, symbol: h.symbol, name: h.name,
                              changePct: pct, changeAmt: amt)
@@ -190,6 +200,7 @@ struct DashboardView: View {
     private var ltValue: Decimal {
         allOpenLots.filter { $0.isLongTerm }.reduce(Decimal(0)) { sum, lot in
             guard let h = holdingMap[lot.holdingId],
+                  !h.isOption,
                   let price = priceService.currentPrice(for: h.symbol) else { return sum }
             return sum + lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
         }
@@ -198,6 +209,7 @@ struct DashboardView: View {
     private var stValue: Decimal {
         allOpenLots.filter { !$0.isLongTerm }.reduce(Decimal(0)) { sum, lot in
             guard let h = holdingMap[lot.holdingId],
+                  !h.isOption,
                   let price = priceService.currentPrice(for: h.symbol) else { return sum }
             return sum + lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
         }
