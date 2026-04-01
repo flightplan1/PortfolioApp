@@ -33,6 +33,11 @@ struct PortfolioAppApp: App {
             case .active:
                 appLockManager.handleForeground()
                 Task { await remoteTaxRatesService.fetchIfNeeded() }
+                Task {
+                    let ctx = persistenceController.container.viewContext
+                    let holdings = (try? ctx.fetch(Holding.allActiveRequest())) ?? []
+                    await SplitService.shared.detectSplitsIfNeeded(holdings: holdings, context: ctx)
+                }
             case .inactive:
                 break
             @unknown default:
@@ -46,6 +51,8 @@ struct PortfolioAppApp: App {
 
 struct RootView: View {
     @EnvironmentObject private var appLockManager: AppLockManager
+    @ObservedObject private var splitService = SplitService.shared
+    @Environment(\.managedObjectContext) private var context
 
     var body: some View {
         ZStack {
@@ -56,5 +63,16 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: appLockManager.isUnlocked)
+        .sheet(item: Binding(
+            get: { splitService.pendingSplits.first },
+            set: { _ in }
+        )) { pending in
+            SplitConfirmationView(
+                pending: pending,
+                onApply: {},
+                onSkip: {}
+            )
+            .environment(\.managedObjectContext, context)
+        }
     }
 }

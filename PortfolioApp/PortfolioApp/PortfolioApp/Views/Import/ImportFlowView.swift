@@ -116,7 +116,7 @@ struct ImportFlowView: View {
         case .splitConfirmation:
             if let result = parseResult {
                 let splits = result.transactions.filter { $0.action == .split }
-                SplitConfirmationView(
+                ImportSplitConfirmationView(
                     splits: splits,
                     skippedRows: $skippedSplitRows,
                     onProceed: { executeImport() }
@@ -827,7 +827,7 @@ private struct PrimaryButtonStyle: ButtonStyle {
 
 /// MARK: - Split Confirmation View
 
-private struct SplitConfirmationView: View {
+private struct ImportSplitConfirmationView: View {
     let splits: [ImportedTransaction]
     @Binding var skippedRows: Set<Int>
     let onProceed: () -> Void

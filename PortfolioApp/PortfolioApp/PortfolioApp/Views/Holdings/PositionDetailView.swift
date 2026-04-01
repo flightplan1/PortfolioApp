@@ -13,19 +13,25 @@ struct PositionDetailView: View {
     @FetchRequest private var closedLots: FetchedResults<Lot>
     @FetchRequest private var transactions: FetchedResults<Transaction>
     @FetchRequest private var dividendEvents: FetchedResults<DividendEvent>
+    @FetchRequest private var splitEvents: FetchedResults<SplitEvent>
 
     @State private var showAddLot          = false
     @State private var showSellPosition    = false
     @State private var showDepositCash     = false
     @State private var showWithdrawCash    = false
     @State private var showAddDividend     = false
+    @State private var showAddSplit        = false
     @State private var lotsCollapsed          = true
     @State private var transactionsCollapsed  = true
     @State private var closedLotsCollapsed    = true
     @State private var dividendsCollapsed     = true
+    @State private var splitsCollapsed        = true
     @State private var lotToEdit:   Lot?
     @State private var lotToSell:   Lot?
     @State private var lotToDelete: Lot?
+    @State private var splitToRevert: SplitEvent?
+    @State private var showRevertAlert = false
+    @State private var revertAlertMessage = ""
 
     // MARK: - Undo Toast
     @State private var undoToastVisible  = false
@@ -40,6 +46,7 @@ struct PositionDetailView: View {
         _closedLots = FetchRequest(fetchRequest: Lot.closedLots(for: holding.id), animation: .default)
         _transactions = FetchRequest(fetchRequest: Transaction.activeTransactions(for: holding.id), animation: .default)
         _dividendEvents = FetchRequest(fetchRequest: DividendEvent.forHolding(holding.id), animation: .default)
+        _splitEvents = FetchRequest(fetchRequest: SplitEvent.forHolding(holding.id), animation: .default)
     }
 
     // MARK: - Computed
@@ -156,6 +163,9 @@ struct PositionDetailView: View {
                     if !dividendEvents.isEmpty {
                         dividendHistoryCard
                     }
+                    if !splitEvents.isEmpty {
+                        splitHistoryCard
+                    }
                     if !transactions.isEmpty {
                         transactionHistoryCard
                     }
@@ -216,6 +226,15 @@ struct PositionDetailView: View {
                                     .foregroundColor(.appGold)
                             }
                         }
+                        if holding.assetType == .stock || holding.assetType == .etf {
+                            Button {
+                                showAddSplit = true
+                            } label: {
+                                Image(systemName: "clock.arrow.circlepath")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundColor(.appBlue.opacity(0.7))
+                            }
+                        }
                         Button {
                             showAddLot = true
                         } label: {
@@ -237,6 +256,10 @@ struct PositionDetailView: View {
         }
         .sheet(isPresented: $showAddDividend) {
             AddDividendView(holding: holding)
+                .environment(\.managedObjectContext, context)
+        }
+        .sheet(isPresented: $showAddSplit) {
+            AddSplitView(holding: holding)
                 .environment(\.managedObjectContext, context)
         }
         .sheet(isPresented: $showAddLot) {
@@ -271,6 +294,17 @@ struct PositionDetailView: View {
             }
         } message: {
             Text("This will remove Lot #\(lotToDelete?.lotNumber ?? 0). This action cannot be undone.")
+        }
+        .alert("Revert Split", isPresented: $showRevertAlert) {
+            Button("Cancel", role: .cancel) { splitToRevert = nil }
+            Button("Revert", role: .destructive) {
+                if let event = splitToRevert {
+                    splitToRevert = nil  // nil before CoreData delete to prevent stale-object access
+                    try? SplitService.shared.revertSplit(event, in: context)
+                }
+            }
+        } message: {
+            Text(revertAlertMessage)
         }
     }
 
@@ -573,6 +607,47 @@ struct PositionDetailView: View {
                     ForEach(Array(dividendEvents.enumerated()), id: \.element.id) { index, event in
                         DividendEventRowView(event: event)
                         if index < dividendEvents.count - 1 {
+                            Divider().background(Color.appBorder)
+                        }
+                    }
+                }
+                .cardStyle()
+            }
+        }
+    }
+
+    // MARK: - Split History Card
+
+    private var splitHistoryCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { splitsCollapsed.toggle() }
+            } label: {
+                HStack {
+                    Text("SPLITS")
+                        .sectionTitleStyle()
+                    Spacer()
+                    Text("\(splitEvents.count)")
+                        .font(AppFont.mono(10))
+                        .foregroundColor(.textMuted)
+                    Image(systemName: splitsCollapsed ? "chevron.down" : "chevron.up")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.textMuted)
+                        .padding(.leading, 4)
+                }
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 4)
+
+            if !splitsCollapsed {
+                VStack(spacing: 0) {
+                    ForEach(Array(splitEvents.enumerated()), id: \.element.id) { index, event in
+                        SplitEventRowView(event: event) {
+                            revertAlertMessage = "Revert the \(event.ratioString) split applied on \(event.splitDate.formatted(.dateTime.month(.abbreviated).day().year()))? All lot quantities and cost bases will be restored to their pre-split values."
+                            splitToRevert = event
+                            showRevertAlert = true
+                        }
+                        if index < splitEvents.count - 1 {
                             Divider().background(Color.appBorder)
                         }
                     }
@@ -1041,6 +1116,68 @@ struct DividendEventRowView: View {
                         .font(AppFont.mono(10))
                         .foregroundColor(.textMuted)
                 }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+}
+
+// MARK: - Split Event Row View
+
+struct SplitEventRowView: View {
+    let event: SplitEvent
+    let onRevert: () -> Void
+
+    private var canRevert: Bool {
+        guard !event.isDeleted, !event.isFault else { return false }
+        guard let snap = try? PersistenceController.shared.container.viewContext
+            .fetch(SplitSnapshot.forSplitEvent(event.id)).first
+        else { return false }
+        return snap.isStillRevertable
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Direction badge
+            Text(event.isForward ? "FWD" : "REV")
+                .font(AppFont.mono(10, weight: .bold))
+                .foregroundColor(event.isForward ? .appGreen : .appRed)
+                .frame(width: 34)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(event.splitDate.formatted(.dateTime.month(.abbreviated).day().year()))
+                    .font(AppFont.mono(12, weight: .bold))
+                    .foregroundColor(.textPrimary)
+                HStack(spacing: 6) {
+                    Text(event.ratioString)
+                        .font(AppFont.mono(11, weight: .semibold))
+                        .foregroundColor(event.isForward ? .appGreen : .appRed)
+                    Text(event.entryMethod == .manual ? "Manual" : "Auto-detected")
+                        .font(AppFont.body(10))
+                        .foregroundColor(.textMuted)
+                }
+            }
+
+            Spacer()
+
+            if canRevert {
+                Button {
+                    onRevert()
+                } label: {
+                    Text("Revert")
+                        .font(AppFont.mono(11, weight: .semibold))
+                        .foregroundColor(.appRed)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color.appRed.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                }
+                .buttonStyle(.plain)
+            } else {
+                Text("×\(event.splitMultiplier.asQuantity(maxDecimalPlaces: 4))")
+                    .font(AppFont.mono(11))
+                    .foregroundColor(.textMuted)
             }
         }
         .padding(.horizontal, 16)
