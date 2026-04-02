@@ -38,6 +38,9 @@ struct AddHoldingView: View {
     @State private var treasuryMaturityDate: Date = Calendar.current.date(byAdding: .month, value: 3, to: Date()) ?? Date()
     @State private var showTreasuryMaturityPicker = false
     @State private var cusip: String = ""
+    @State private var treasuryCouponRate: String = ""    // % annual — tNote, tBond, TIPS
+    @State private var ibondFixedRate: String = ""        // % — I-Bonds
+    @State private var ibondInflationRate: String = ""    // semiannual CPI % — I-Bonds
 
     // MARK: - Symbol Lookup
 
@@ -271,6 +274,47 @@ struct AddHoldingView: View {
                             .foregroundColor(.textPrimary)
                             .tint(.appBlue)
                             .onChange(of: cusip) { _, v in cusip = v.uppercased() }
+                    }
+
+                    // Coupon Rate — T-Notes, T-Bonds, TIPS only
+                    if treasuryType == .tNote || treasuryType == .tBond || treasuryType == .tips {
+                        Divider().background(Color.appBorder)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Annual Coupon Rate (%)")
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .foregroundColor(.textMuted)
+                            TextField("4.500", text: $treasuryCouponRate)
+                                .keyboardType(.decimalPad)
+                                .font(.system(size: 14, design: .monospaced))
+                                .foregroundColor(.textPrimary)
+                                .tint(.appBlue)
+                        }
+                    }
+
+                    // I-Bond rates
+                    if treasuryType == .iBond {
+                        Divider().background(Color.appBorder)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Fixed Rate (%)")
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .foregroundColor(.textMuted)
+                            TextField("1.300", text: $ibondFixedRate)
+                                .keyboardType(.decimalPad)
+                                .font(.system(size: 14, design: .monospaced))
+                                .foregroundColor(.textPrimary)
+                                .tint(.appBlue)
+                        }
+                        Divider().background(Color.appBorder)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Semiannual CPI Rate (%)")
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .foregroundColor(.textMuted)
+                            TextField("2.240", text: $ibondInflationRate)
+                                .keyboardType(.decimalPad)
+                                .font(.system(size: 14, design: .monospaced))
+                                .foregroundColor(.textPrimary)
+                                .tint(.appBlue)
+                        }
                     }
 
                 } else {
@@ -704,10 +748,15 @@ struct AddHoldingView: View {
             }
         }
 
-        // Determine actual quantity for options
+        // Determine lot quantity
+        // Treasury: qty=1, cost=purchase price (face value is tracked in TreasuryPosition)
+        // Options:  qty=number of contracts
+        // Others:   qty as entered
         let lotQty: Decimal
         if assetType == .options, let contracts = Int(quantity) {
             lotQty = Decimal(contracts)
+        } else if assetType == .treasury {
+            lotQty = 1
         } else {
             lotQty = qty
         }
@@ -752,6 +801,32 @@ struct AddHoldingView: View {
             // Schedule expiry notifications for new options holdings
             if assetType == .options {
                 Task { await OptionsNotificationManager.shared.scheduleExpiryNotifications(for: holding) }
+            }
+            // Create TreasuryPosition for treasury holdings
+            if assetType == .treasury {
+                let faceValue = Decimal.from(quantity) ?? price
+                let couponRateDecimal = (Decimal.from(treasuryCouponRate) ?? 0) / 100
+                let fixedRateDecimal  = (Decimal.from(ibondFixedRate) ?? 0) / 100
+                let inflRateDecimal   = (Decimal.from(ibondInflationRate) ?? 0) / 100
+                let treasuryPos = TreasuryPosition.create(
+                    in: context,
+                    holdingId: holding.id,
+                    instrument: treasuryType,
+                    faceValue: faceValue,
+                    purchasePrice: price,
+                    purchaseDate: tradeDate,
+                    maturityDate: treasuryMaturityDate,
+                    couponRate: couponRateDecimal,
+                    cusip: cusip.isEmpty ? nil : cusip,
+                    ibondFixedRate: fixedRateDecimal,
+                    ibondInflationRate: inflRateDecimal
+                )
+                try? context.save()
+                if treasuryPos.couponFrequency != .zero {
+                    CouponPayment.generateSchedule(for: treasuryPos, in: context)
+                    try? context.save()
+                }
+                TreasuryMaturityService.shared.scheduleMaturityAlert(for: treasuryPos, symbol: holding.symbol)
             }
             dismiss()
         } catch {

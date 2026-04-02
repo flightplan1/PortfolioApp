@@ -33,8 +33,10 @@ struct PortfolioAppApp: App {
             case .active:
                 appLockManager.handleForeground()
                 Task { await remoteTaxRatesService.fetchIfNeeded() }
+                let ctx = persistenceController.container.viewContext
+                PriceAlertService.shared.start(priceService: priceService, context: ctx)
+                TreasuryMaturityService.shared.start(context: ctx)
                 Task {
-                    let ctx = persistenceController.container.viewContext
                     let holdings = (try? ctx.fetch(Holding.allActiveRequest())) ?? []
                     await SplitService.shared.detectSplitsIfNeeded(holdings: holdings, context: ctx)
                 }

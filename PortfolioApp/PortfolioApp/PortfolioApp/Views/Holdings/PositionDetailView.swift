@@ -21,6 +21,7 @@ struct PositionDetailView: View {
     @State private var showWithdrawCash    = false
     @State private var showAddDividend     = false
     @State private var showAddSplit        = false
+    @State private var showPriceAlerts     = false
     @State private var lotsCollapsed          = true
     @State private var transactionsCollapsed  = true
     @State private var closedLotsCollapsed    = true
@@ -235,6 +236,15 @@ struct PositionDetailView: View {
                                     .foregroundColor(.appBlue.opacity(0.7))
                             }
                         }
+                        if holding.assetType == .stock || holding.assetType == .etf || holding.assetType == .crypto || holding.assetType == .option {
+                            Button {
+                                showPriceAlerts = true
+                            } label: {
+                                Image(systemName: "bell")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundColor(.appGold.opacity(0.85))
+                            }
+                        }
                         Button {
                             showAddLot = true
                         } label: {
@@ -260,6 +270,10 @@ struct PositionDetailView: View {
         }
         .sheet(isPresented: $showAddSplit) {
             AddSplitView(holding: holding)
+                .environment(\.managedObjectContext, context)
+        }
+        .sheet(isPresented: $showPriceAlerts) {
+            PriceAlertsView(holding: holding)
                 .environment(\.managedObjectContext, context)
         }
         .sheet(isPresented: $showAddLot) {

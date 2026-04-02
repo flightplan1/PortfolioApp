@@ -193,7 +193,10 @@ struct HoldingsListView: View {
     }
 
     private func holdingRow(_ holding: Holding) -> some View {
-        NavigationLink(destination: PositionDetailView(holding: holding)) {
+        NavigationLink(destination: holding.isTreasury
+            ? AnyView(TreasuryDetailView(holding: holding))
+            : AnyView(PositionDetailView(holding: holding))
+        ) {
             HoldingRowView(holding: holding)
         }
         .listRowBackground(Color.surface)

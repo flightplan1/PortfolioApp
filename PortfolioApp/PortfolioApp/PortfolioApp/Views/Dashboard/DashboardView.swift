@@ -525,7 +525,10 @@ struct DashboardView: View {
             ForEach(holdingWeights) { item in
                 Group {
                     if let holding = holdingMap[item.id] {
-                        NavigationLink(destination: PositionDetailView(holding: holding)) {
+                        NavigationLink(destination: holding.isTreasury
+                            ? AnyView(TreasuryDetailView(holding: holding))
+                            : AnyView(PositionDetailView(holding: holding))
+                        ) {
                             weightRow(item: item)
                         }
                         .buttonStyle(.plain)

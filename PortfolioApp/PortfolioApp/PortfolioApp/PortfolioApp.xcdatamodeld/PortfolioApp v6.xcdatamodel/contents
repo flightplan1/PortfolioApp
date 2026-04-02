@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24411" systemVersion="24G517" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
+    <entity name="BaseFinancialRecord" representedClassName=".BaseFinancialRecord" isAbstract="YES" syncable="YES">
+        <attribute name="ckRecordChangeTag" optional="YES" attributeType="String"/>
+        <attribute name="ckRecordID" optional="YES" attributeType="String"/>
+        <attribute name="lastModifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastModifiedDevice" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="DividendEvent" representedClassName="DividendEvent" parentEntity="BaseFinancialRecord" syncable="YES">
+        <attribute name="dividendPerShareRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="entryMethodRaw" optional="YES" attributeType="String"/>
+        <attribute name="exDividendDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="grossAmountRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="holdingId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isQualified" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isReinvested" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="linkedCashPositionId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="linkedLotId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="payDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="reinvestedPricePerShareRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="reinvestedSharesRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="sharesHeldRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="symbol" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="Holding" representedClassName="Holding" parentEntity="BaseFinancialRecord" syncable="YES">
+        <attribute name="assetTypeRaw" optional="YES" attributeType="String"/>
+        <attribute name="bankFeeRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="currency" optional="YES" attributeType="String"/>
+        <attribute name="dividendFrequencyRaw" optional="YES" attributeType="String"/>
+        <attribute name="expiryDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isDRIPEnabled" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="isSection1256" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="isShortPosition" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastDividendPerShareRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="lastExDividendDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="optionTypeRaw" optional="YES" attributeType="String"/>
+        <attribute name="sector" optional="YES" attributeType="String"/>
+        <attribute name="strikePriceRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="symbol" optional="YES" attributeType="String"/>
+        <attribute name="underlyingPriceAtExecutionRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="underlyingSymbol" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="Lot" representedClassName="Lot" parentEntity="BaseFinancialRecord" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="deletedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="holdingId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isClosed" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="isSoftDeleted" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="linkedDividendEventId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lotNumber" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lotSourceRaw" optional="YES" attributeType="String"/>
+        <attribute name="originalCostBasisPerShareRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="originalQtyRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="purchaseDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="remainingQtyRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="settlementDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="sourceNote" optional="YES" attributeType="String"/>
+        <attribute name="splitAdjustedCostBasisPerShareRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="splitAdjustedQtyRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="splitHistoryData" optional="YES" attributeType="Binary"/>
+        <attribute name="taxTreatmentOverrideRaw" optional="YES" attributeType="String"/>
+        <attribute name="totalCostBasisRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+    </entity>
+    <entity name="PriceAlert" representedClassName="PriceAlert" parentEntity="BaseFinancialRecord" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="directionRaw" optional="YES" attributeType="String"/>
+        <attribute name="holdingId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isTriggered" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="symbol" optional="YES" attributeType="String"/>
+        <attribute name="targetPriceRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="triggeredAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="SplitEvent" representedClassName="SplitEvent" parentEntity="BaseFinancialRecord" syncable="YES">
+        <attribute name="appliedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="entryMethodRaw" optional="YES" attributeType="String"/>
+        <attribute name="holdingId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isForward" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="ratioDenominator" optional="YES" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="ratioNumerator" optional="YES" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="snapshotAfterSharesRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="snapshotBeforeSharesRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="splitDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="splitMultiplierRaw" optional="YES" attributeType="Decimal" defaultValueString="1.0"/>
+        <attribute name="symbol" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="SplitSnapshot" representedClassName="SplitSnapshot" syncable="NO">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="revertableUntil" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="snapshotData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="splitEventId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="Transaction" representedClassName="Transaction" parentEntity="BaseFinancialRecord" syncable="YES">
+        <attribute name="cityTaxRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="deletedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="deletionReasonRaw" optional="YES" attributeType="String"/>
+        <attribute name="federalTaxRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="feeRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="holdingId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="importSessionId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isLongTerm" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isSoftDeleted" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lotId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lotMethodRaw" optional="YES" attributeType="String"/>
+        <attribute name="niitRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="pricePerShareRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="quantityRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="realizedGainRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="settlementDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="stateTaxRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="totalAmountRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="totalTaxRaw" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="tradeDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="typeRaw" optional="YES" attributeType="String"/>
+    </entity>
+</model>

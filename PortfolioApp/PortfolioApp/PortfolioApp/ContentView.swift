@@ -50,7 +50,7 @@ struct ContentView: View {
                     .tabItem { Label(Tab.pnl.title, systemImage: Tab.pnl.systemImage) }
                     .tag(Tab.pnl)
 
-                NewsPlaceholder()
+                NewsView()
                     .tabItem { Label(Tab.news.title, systemImage: Tab.news.systemImage) }
                     .tag(Tab.news)
 
