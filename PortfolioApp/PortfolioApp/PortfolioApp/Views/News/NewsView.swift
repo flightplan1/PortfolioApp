@@ -29,6 +29,12 @@ struct NewsView: View {
 
     @State private var selectedSymbol: String? = nil  // nil = All
     @State private var showEarnings = true
+    @State private var sentimentFilter: SentimentFilter = .all
+
+    enum SentimentFilter: String, CaseIterable {
+        case all      = "All"
+        case negative = "Negative"
+    }
 
     // MARK: - Computed
 
@@ -47,8 +53,14 @@ struct NewsView: View {
     }
 
     private var filteredArticles: [NewsArticle] {
-        guard let sym = selectedSymbol else { return newsService.articles }
-        return newsService.articles.filter { $0.relatedSymbols.contains(sym) }
+        var articles = newsService.articles
+        if let sym = selectedSymbol {
+            articles = articles.filter { $0.relatedSymbols.contains(sym) }
+        }
+        if sentimentFilter == .negative {
+            articles = articles.filter { $0.sentiment == .negative }
+        }
+        return articles
     }
 
     private var upcomingEarnings: [EarningsEvent] {
@@ -116,6 +128,9 @@ struct NewsView: View {
                     symbolFilterRow
                 }
 
+                // Sentiment filter
+                sentimentFilterRow
+
                 // Earnings section (only for All or when a symbol has earnings)
                 let hasEarnings = !upcomingEarnings.isEmpty || !recentEarnings.isEmpty
                 if hasEarnings && selectedSymbol == nil {
@@ -157,6 +172,39 @@ struct NewsView: View {
                 .background(isSelected ? Color.appBlue : Color.surface)
                 .clipShape(Capsule())
                 .overlay(Capsule().stroke(isSelected ? Color.clear : Color.appBorder, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Sentiment Filter Row
+
+    private var sentimentFilterRow: some View {
+        HStack(spacing: 8) {
+            sentimentChip(.all)
+            sentimentChip(.negative)
+            Spacer()
+        }
+    }
+
+    private func sentimentChip(_ filter: SentimentFilter) -> some View {
+        let isSelected = sentimentFilter == filter
+        let bgColor: Color = isSelected ? (filter == .negative ? .appRed : .appBlue) : .surface
+        return Button {
+            withAnimation(.easeInOut(duration: 0.15)) { sentimentFilter = filter }
+        } label: {
+            HStack(spacing: 5) {
+                if filter == .negative {
+                    Circle().fill(Color.appRed.opacity(isSelected ? 0 : 1)).frame(width: 7, height: 7)
+                }
+                Text(filter.rawValue)
+                    .font(AppFont.mono(12, weight: isSelected ? .bold : .regular))
+                    .foregroundColor(isSelected ? .white : .textSub)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(bgColor)
+            .clipShape(Capsule())
+            .overlay(Capsule().stroke(isSelected ? Color.clear : Color.appBorder, lineWidth: 1))
         }
         .buttonStyle(.plain)
     }
@@ -310,11 +358,16 @@ struct NewsArticleRow: View {
                         }
                     }
 
-                    Text(article.headline)
-                        .font(AppFont.body(13, weight: .semibold))
-                        .foregroundColor(.textPrimary)
-                        .lineLimit(3)
-                        .multilineTextAlignment(.leading)
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(sentimentColor(article.sentiment))
+                            .frame(width: 7, height: 7)
+                        Text(article.headline)
+                            .font(AppFont.body(13, weight: .semibold))
+                            .foregroundColor(.textPrimary)
+                            .lineLimit(3)
+                            .multilineTextAlignment(.leading)
+                    }
 
                     HStack(spacing: 8) {
                         Text(article.source)
@@ -339,6 +392,15 @@ struct NewsArticleRow: View {
             .padding(.vertical, 14)
         }
         .buttonStyle(.plain)
+    }
+}
+
+    private func sentimentColor(_ sentiment: NewsSentiment) -> Color {
+        switch sentiment {
+        case .positive: return .appGreen
+        case .negative: return .appRed
+        case .neutral:  return .textMuted
+        }
     }
 }
 

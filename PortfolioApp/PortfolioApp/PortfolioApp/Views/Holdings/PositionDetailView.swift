@@ -150,6 +150,60 @@ struct PositionDetailView: View {
         return saving > 0 ? saving : nil
     }
 
+    // MARK: - Toolbar
+
+    @ViewBuilder
+    private var trailingToolbarButtons: some View {
+        HStack(spacing: 4) {
+            if holding.assetType == .cash {
+                Button { showWithdrawCash = true } label: {
+                    Text("Withdraw")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.appRed)
+                }
+                Button { showDepositCash = true } label: {
+                    Text("Deposit")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.appBlue)
+                }
+            } else {
+                if !openLots.isEmpty {
+                    Button { showSellPosition = true } label: {
+                        Text("Sell")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.appRed)
+                    }
+                }
+                if holding.assetType == .stock || holding.assetType == .etf || holding.assetType == .crypto {
+                    Button { showAddDividend = true } label: {
+                        Image(systemName: "dollarsign.circle")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundColor(.appGold)
+                    }
+                }
+                if holding.assetType == .stock || holding.assetType == .etf {
+                    Button { showAddSplit = true } label: {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundColor(.appBlue.opacity(0.7))
+                    }
+                }
+                if holding.assetType == .stock || holding.assetType == .etf || holding.assetType == .crypto || holding.assetType == .options {
+                    Button { showPriceAlerts = true } label: {
+                        Image(systemName: "bell")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundColor(.appGold.opacity(0.85))
+                    }
+                }
+                Button { showAddLot = true } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.appBlue)
+                }
+            }
+        }
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -192,68 +246,7 @@ struct PositionDetailView: View {
         .toolbarColorScheme(.dark, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                HStack(spacing: 4) {
-                    if holding.assetType == .cash {
-                        Button {
-                            showWithdrawCash = true
-                        } label: {
-                            Text("Withdraw")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.appRed)
-                        }
-                        Button {
-                            showDepositCash = true
-                        } label: {
-                            Text("Deposit")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.appBlue)
-                        }
-                    } else {
-                        if !openLots.isEmpty {
-                            Button {
-                                showSellPosition = true
-                            } label: {
-                                Text("Sell")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.appRed)
-                            }
-                        }
-                        if holding.assetType == .stock || holding.assetType == .etf || holding.assetType == .crypto {
-                            Button {
-                                showAddDividend = true
-                            } label: {
-                                Image(systemName: "dollarsign.circle")
-                                    .font(.system(size: 17, weight: .semibold))
-                                    .foregroundColor(.appGold)
-                            }
-                        }
-                        if holding.assetType == .stock || holding.assetType == .etf {
-                            Button {
-                                showAddSplit = true
-                            } label: {
-                                Image(systemName: "clock.arrow.circlepath")
-                                    .font(.system(size: 17, weight: .semibold))
-                                    .foregroundColor(.appBlue.opacity(0.7))
-                            }
-                        }
-                        if holding.assetType == .stock || holding.assetType == .etf || holding.assetType == .crypto || holding.assetType == .option {
-                            Button {
-                                showPriceAlerts = true
-                            } label: {
-                                Image(systemName: "bell")
-                                    .font(.system(size: 17, weight: .semibold))
-                                    .foregroundColor(.appGold.opacity(0.85))
-                            }
-                        }
-                        Button {
-                            showAddLot = true
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundColor(.appBlue)
-                        }
-                    }
-                }
+                trailingToolbarButtons
             }
         }
         .sheet(isPresented: $showDepositCash) {

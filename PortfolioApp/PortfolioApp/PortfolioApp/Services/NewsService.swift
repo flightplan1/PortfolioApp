@@ -1,9 +1,14 @@
 import Foundation
 import Combine
+import UserNotifications
 
 // MARK: - NewsArticle
 // Represents a single news article from Finnhub.
 // Used for both company-specific news and general market news.
+
+enum NewsSentiment: String {
+    case positive, negative, neutral
+}
 
 struct NewsArticle: Identifiable, Equatable {
     let id: Int           // Finnhub article ID
@@ -14,6 +19,7 @@ struct NewsArticle: Identifiable, Equatable {
     let imageURL: URL?
     let publishedAt: Date
     let relatedSymbols: [String]  // symbols mentioned (from company news calls)
+    let sentiment: NewsSentiment  // keyword-derived
 
     static func == (lhs: NewsArticle, rhs: NewsArticle) -> Bool { lhs.id == rhs.id }
 }
@@ -39,6 +45,13 @@ final class NewsService: ObservableObject {
 
     private var lastFetchedAt: Date? = nil
     private let staleInterval: TimeInterval = 15 * 60  // 15 minutes
+
+    // Breaking news notification throttle — max 3 per day
+    private let breakingNewsCountKey = "breaking_news_count_v1"
+    private let breakingNewsDateKey  = "breaking_news_date_v1"
+    private let breakingNewsLimit    = 3
+
+    private var seenArticleIds: Set<Int> = []
 
     // MARK: - Public API
 
@@ -138,12 +151,75 @@ final class NewsService: ObservableObject {
                     url: URL(string: article.url),
                     imageURL: URL(string: article.image),
                     publishedAt: Date(timeIntervalSince1970: article.datetime),
-                    relatedSymbols: []
+                    relatedSymbols: [],
+                    sentiment: deriveSentiment(headline: article.headline)
                 )
             }
         } catch {
             return nil
         }
+    }
+
+    // MARK: - Breaking News Notifications
+
+    /// Sends a local notification for a new article if under today's throttle limit.
+    func sendBreakingNewsNotificationIfAllowed(for article: NewsArticle, prefs: NotificationPreferencesManager) async {
+        guard prefs.breakingNewsAlertsEnabled else { return }
+
+        let ud = UserDefaults.standard
+        let todayStr = isoDateString(Date())
+        let storedDate  = ud.string(forKey: breakingNewsDateKey) ?? ""
+        let storedCount = storedDate == todayStr ? (ud.integer(forKey: breakingNewsCountKey)) : 0
+        guard storedCount < breakingNewsLimit else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = article.relatedSymbols.first.map { "\($0) — Breaking News" } ?? "Market News"
+        content.body  = article.headline
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: "breaking_\(article.id)",
+            content: content,
+            trigger: nil   // deliver immediately
+        )
+        try? await UNUserNotificationCenter.current().add(request)
+
+        ud.set(todayStr, forKey: breakingNewsDateKey)
+        ud.set(storedCount + 1, forKey: breakingNewsCountKey)
+    }
+
+    /// Call from background fetch handler: notify for articles not seen in the previous fetch.
+    func notifyNewArticles(prefs: NotificationPreferencesManager) async {
+        for article in articles where !seenArticleIds.contains(article.id) {
+            await sendBreakingNewsNotificationIfAllowed(for: article, prefs: prefs)
+            seenArticleIds.insert(article.id)
+        }
+    }
+
+    // MARK: - Sentiment
+
+    /// Derives sentiment from the article headline using keyword matching.
+    private func deriveSentiment(headline: String) -> NewsSentiment {
+        let lower = headline.lowercased()
+        let negativeWords = [
+            "fall", "falls", "fell", "drop", "drops", "dropped", "decline", "declines",
+            "loss", "losses", "crash", "crashes", "plunge", "plunges", "slump", "slumps",
+            "miss", "misses", "missed", "cut", "cuts", "layoff", "layoffs", "recall",
+            "fraud", "investigation", "fine", "penalty", "warning", "risk", "concern",
+            "downgrade", "disappoints", "disappointing", "weak", "below expectations",
+            "sell-off", "selloff", "bearish", "bankruptcy", "default", "debt"
+        ]
+        let positiveWords = [
+            "rise", "rises", "rose", "gain", "gains", "gained", "surge", "surges",
+            "beat", "beats", "record", "profit", "profits", "upgrade", "growth",
+            "deal", "acquisition", "partnership", "exceeds", "above expectations",
+            "bullish", "strong", "soar", "soars", "rally", "rallies", "breakthrough"
+        ]
+        let isNegative = negativeWords.contains { lower.contains($0) }
+        let isPositive = positiveWords.contains { lower.contains($0) }
+        if isNegative && !isPositive { return .negative }
+        if isPositive && !isNegative { return .positive }
+        return .neutral
     }
 
     // MARK: - Helpers
@@ -157,7 +233,8 @@ final class NewsService: ObservableObject {
             url: URL(string: a.url),
             imageURL: URL(string: a.image),
             publishedAt: Date(timeIntervalSince1970: a.datetime),
-            relatedSymbols: symbols
+            relatedSymbols: symbols,
+            sentiment: deriveSentiment(headline: a.headline)
         )
     }
 

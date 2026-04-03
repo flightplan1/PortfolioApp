@@ -144,7 +144,7 @@ struct TreasuryDetailView: View {
                         Text(abs(discount).asCurrency)
                             .font(AppFont.mono(13, weight: .semibold))
                             .foregroundColor(discount >= 0 ? .appGreen : .appRed)
-                        Text("(\(abs(pos.discountPercent), specifier: "%.2f")%)")
+                        Text("(\(String(format: "%.2f", (abs(pos.discountPercent) as NSDecimalNumber).doubleValue))%)")
                             .font(AppFont.mono(11))
                             .foregroundColor(.textMuted)
                     }
@@ -173,7 +173,7 @@ struct TreasuryDetailView: View {
         FormCard(title: "YIELD") {
             VStack(spacing: 0) {
                 statRow("YTM at Purchase",
-                        value: "\((pos.ytmAtPurchase * 100).rounded(to: 3), specifier: "%.3f")%")
+                        value: "\(String(format: "%.3f", ((pos.ytmAtPurchase * 100).rounded(to: 3) as NSDecimalNumber).doubleValue))%")
 
                 if pos.instrumentType != .iBond {
                     let currentYTM = TreasuryEngine.ytmAtPurchase(
@@ -186,12 +186,12 @@ struct TreasuryDetailView: View {
                     )
                     Divider().background(Color.appBorder)
                     statRow("Current Est. YTM",
-                            value: "\((currentYTM * 100).rounded(to: 3), specifier: "%.3f")%")
+                            value: "\(String(format: "%.3f", ((currentYTM * 100).rounded(to: 3) as NSDecimalNumber).doubleValue))%")
                 }
 
                 if pos.couponFrequency != .zero {
                     Divider().background(Color.appBorder)
-                    statRow("Coupon Rate", value: "\((pos.couponRate * 100).rounded(to: 3), specifier: "%.3f")% annual")
+                    statRow("Coupon Rate", value: "\(String(format: "%.3f", ((pos.couponRate * 100).rounded(to: 3) as NSDecimalNumber).doubleValue))% annual")
                     Divider().background(Color.appBorder)
                     statRow("Per Payment", value: pos.perPaymentCouponAmount.asCurrency)
                     Divider().background(Color.appBorder)
@@ -285,17 +285,17 @@ struct TreasuryDetailView: View {
         FormCard(title: "I-BOND") {
             VStack(spacing: 0) {
                 statRow("Fixed Rate",
-                        value: "\((pos.fixedRate * 100).rounded(to: 3), specifier: "%.3f")%")
+                        value: "\(String(format: "%.3f", ((pos.fixedRate * 100).rounded(to: 3) as NSDecimalNumber).doubleValue))%")
                 Divider().background(Color.appBorder)
                 statRow("Semiannual CPI Rate",
-                        value: "\((pos.currentInflationRate * 100).rounded(to: 3), specifier: "%.3f")%")
+                        value: "\(String(format: "%.3f", ((pos.currentInflationRate * 100).rounded(to: 3) as NSDecimalNumber).doubleValue))%")
                 Divider().background(Color.appBorder)
                 HStack {
                     Text("Composite Rate")
                         .font(AppFont.body(13))
                         .foregroundColor(.textSub)
                     Spacer()
-                    Text("\((pos.compositeRate * 100).rounded(to: 3), specifier: "%.3f")%")
+                    Text("\(String(format: "%.3f", ((pos.compositeRate * 100).rounded(to: 3) as NSDecimalNumber).doubleValue))%")
                         .font(AppFont.mono(13, weight: .semibold))
                         .foregroundColor(.appGreen)
                 }
@@ -675,7 +675,7 @@ struct TreasuryDetailView: View {
         pos.maturityProceeds = pos.faceValue
         try? context.save()
         // Credit face value to cash
-        CashLedgerService.credit(amount: pos.faceValue, note: "Treasury maturity proceeds — \(holding.symbol)", in: context)
+        CashLedgerService.credit(amount: pos.faceValue, date: Date(), sourceNote: "Treasury maturity proceeds — \(holding.symbol)", in: context)
         try? context.save()
     }
 

@@ -234,7 +234,7 @@ struct AddTreasuryPositionView: View {
                             .font(AppFont.body(13))
                             .foregroundColor(.textSub)
                         Spacer()
-                        Text("\((composite * 100).rounded(to: 3), specifier: "%.3f")%")
+                        Text("\(String(format: "%.3f", ((composite * 100).rounded(to: 3) as NSDecimalNumber).doubleValue))%")
                             .font(AppFont.mono(13, weight: .semibold))
                             .foregroundColor(.appGreen)
                     }
@@ -267,7 +267,7 @@ struct AddTreasuryPositionView: View {
                     Text("YTM at Purchase")
                         .font(AppFont.body(13))
                         .foregroundColor(.textSub)
-                    Text("\((ytm * 100).rounded(to: 3), specifier: "%.3f")%")
+                    Text("\(String(format: "%.3f", ((ytm * 100).rounded(to: 3) as NSDecimalNumber).doubleValue))%")
                         .font(AppFont.mono(20, weight: .bold))
                         .foregroundColor(.appGreen)
                 }

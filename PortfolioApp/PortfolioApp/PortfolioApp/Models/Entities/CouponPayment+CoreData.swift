@@ -67,7 +67,7 @@ extension CouponPayment {
         isReceived = true
         receivedDate = Date()
         if creditCash {
-            CashLedgerService.credit(amount: amount, note: "Coupon payment", in: context)
+            CashLedgerService.credit(amount: amount, date: Date(), sourceNote: "Coupon payment", in: context)
         }
     }
 }
