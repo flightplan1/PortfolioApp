@@ -393,7 +393,6 @@ struct NewsArticleRow: View {
         }
         .buttonStyle(.plain)
     }
-}
 
     private func sentimentColor(_ sentiment: NewsSentiment) -> Color {
         switch sentiment {

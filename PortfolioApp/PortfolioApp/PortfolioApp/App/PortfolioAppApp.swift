@@ -1,10 +1,21 @@
 import SwiftUI
 import CoreData
+import BackgroundTasks
+
+private let bgTaskIdentifier = "com.portfolioapp.newsrefresh"
 
 @main
 struct PortfolioAppApp: App {
 
     let persistenceController = PersistenceController.shared
+
+    init() {
+        // BGTask handler must be registered before the app finishes launching.
+        BGTaskScheduler.shared.register(forTaskWithIdentifier: bgTaskIdentifier, using: nil) { task in
+            guard let refreshTask = task as? BGAppRefreshTask else { task.setTaskCompleted(success: false); return }
+            PortfolioAppApp.handleBackgroundRefresh(refreshTask)
+        }
+    }
 
     @StateObject private var networkMonitor         = NetworkMonitor()
     @StateObject private var appLockManager         = AppLockManager()
@@ -30,21 +41,72 @@ struct PortfolioAppApp: App {
             case .background:
                 persistenceController.save()
                 appLockManager.handleBackground()
+                scheduleBackgroundRefresh()
             case .active:
                 appLockManager.handleForeground()
                 Task { await remoteTaxRatesService.fetchIfNeeded() }
                 let ctx = persistenceController.container.viewContext
                 PriceAlertService.shared.start(priceService: priceService, context: ctx)
                 TreasuryMaturityService.shared.start(context: ctx)
+                let prefs = NotificationPreferencesManager.shared
                 Task {
                     let holdings = (try? ctx.fetch(Holding.allActiveRequest())) ?? []
                     await SplitService.shared.detectSplitsIfNeeded(holdings: holdings, context: ctx)
+
+                    // Earnings notifications — weekly re-check
+                    let stockSymbols = holdings
+                        .filter { $0.assetType == .stock || $0.assetType == .etf }
+                        .map { $0.symbol }
+                    await EarningsService.shared.fetchIfNeeded(symbols: stockSymbols)
+                    await EarningsNotificationManager.shared.scheduleIfNeeded(
+                        events: EarningsService.shared.events, prefs: prefs
+                    )
+
+                    // LT threshold notifications — every foreground
+                    let lotReq = NSFetchRequest<Lot>(entityName: "Lot")
+                    lotReq.predicate = NSPredicate(format: "isClosed == NO AND isSoftDeleted == NO")
+                    let lots = (try? ctx.fetch(lotReq)) ?? []
+                    await LTThresholdNotificationManager.shared.scheduleAll(
+                        lots: lots, holdings: holdings, prefs: prefs
+                    )
                 }
             case .inactive:
                 break
             @unknown default:
                 break
             }
+        }
+    }
+
+    // MARK: - Background Refresh
+
+    private func scheduleBackgroundRefresh() {
+        let request = BGAppRefreshTaskRequest(identifier: bgTaskIdentifier)
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 30 * 60)  // no sooner than 30 min
+        try? BGTaskScheduler.shared.submit(request)
+    }
+
+    static func handleBackgroundRefresh(_ task: BGAppRefreshTask) {
+        let ctx = PersistenceController.shared.container.viewContext
+        let taskOp = Task { @MainActor in
+            let holdings = (try? ctx.fetch(Holding.allActiveRequest())) ?? []
+            let stockSymbols = holdings
+                .filter { $0.assetType == .stock || $0.assetType == .etf }
+                .map { $0.symbol }
+
+            let prefs = NotificationPreferencesManager.shared
+            await NewsService.shared.fetch(symbols: stockSymbols)
+            await NewsService.shared.notifyNewArticles(prefs: prefs)
+
+            await EarningsService.shared.fetch(symbols: stockSymbols)
+            await EarningsNotificationManager.shared.scheduleAll(
+                events: EarningsService.shared.events, prefs: prefs
+            )
+            task.setTaskCompleted(success: true)
+        }
+        task.expirationHandler = {
+            taskOp.cancel()
+            task.setTaskCompleted(success: false)
         }
     }
 }

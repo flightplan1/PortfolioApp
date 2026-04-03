@@ -6,6 +6,14 @@ struct SettingsView: View {
     @EnvironmentObject private var lockManager:            AppLockManager
     @EnvironmentObject private var taxProfileManager:      TaxProfileManager
     @EnvironmentObject private var remoteTaxRatesService:  RemoteTaxRatesService
+    @ObservedObject private var notifPrefs = NotificationPreferencesManager.shared
+
+    @Environment(\.managedObjectContext) private var context
+
+    @FetchRequest(
+        fetchRequest: Holding.allActiveRequest(),
+        animation: .none
+    ) private var holdings: FetchedResults<Holding>
 
     @State private var showTaxOnboarding  = false
     @State private var remoteURLDraft     = ""
@@ -31,6 +39,7 @@ struct SettingsView: View {
                     taxProfileSection
                     taxRatesDataSection
                     apiKeysSection
+                    notificationsSection
                     securitySection
                     dataSyncSection
                     aboutSection
@@ -496,6 +505,122 @@ struct SettingsView: View {
             }
             .padding(.horizontal, 4)
         }
+    }
+
+    // MARK: - Notifications Section
+
+    private var notificationsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("NOTIFICATIONS")
+                .sectionTitleStyle()
+                .padding(.horizontal, 4)
+
+            VStack(spacing: 0) {
+                notifToggleRow(
+                    icon: "calendar.badge.clock",
+                    iconColor: .appBlue,
+                    title: "Earnings Alerts",
+                    subtitle: "Day before a held stock reports earnings",
+                    isOn: $notifPrefs.earningsAlertsEnabled
+                )
+                Divider().background(Color.appBorder)
+                notifToggleRow(
+                    icon: "chart.line.uptrend.xyaxis",
+                    iconColor: .appGold,
+                    title: "Long-Term Tax Alerts",
+                    subtitle: "Day before a lot qualifies for long-term rates",
+                    isOn: $notifPrefs.ltThresholdAlertsEnabled
+                )
+                Divider().background(Color.appBorder)
+                notifToggleRow(
+                    icon: "newspaper.fill",
+                    iconColor: .appGreen,
+                    title: "Breaking News",
+                    subtitle: "Up to 3 alerts per day for new articles",
+                    isOn: $notifPrefs.breakingNewsAlertsEnabled
+                )
+            }
+            .cardStyle()
+
+            // Per-symbol mutes
+            let stockSymbols = holdings
+                .filter { $0.assetType == .stock || $0.assetType == .etf || $0.assetType == .crypto }
+                .map { $0.symbol }
+                .sorted()
+
+            if !stockSymbols.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("MUTED SYMBOLS")
+                        .sectionTitleStyle()
+                        .padding(.horizontal, 4)
+
+                    VStack(spacing: 0) {
+                        ForEach(Array(stockSymbols.enumerated()), id: \.element) { index, symbol in
+                            HStack {
+                                Text(symbol)
+                                    .font(AppFont.mono(13, weight: .semibold))
+                                    .foregroundColor(.textPrimary)
+                                Spacer()
+                                Toggle("", isOn: Binding(
+                                    get: { !notifPrefs.isMuted(symbol) },
+                                    set: { enabled in
+                                        if !enabled { notifPrefs.toggleMute(symbol) }
+                                        else if notifPrefs.isMuted(symbol) { notifPrefs.toggleMute(symbol) }
+                                    }
+                                ))
+                                .labelsHidden()
+                                .tint(.appGreen)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 11)
+                            if index < stockSymbols.count - 1 {
+                                Divider().background(Color.appBorder)
+                            }
+                        }
+                    }
+                    .cardStyle()
+
+                    Text("Muting a symbol silences all notifications for that holding.")
+                        .font(AppFont.body(11))
+                        .foregroundColor(.textMuted)
+                        .padding(.horizontal, 4)
+                }
+            }
+        }
+    }
+
+    private func notifToggleRow(
+        icon: String,
+        iconColor: Color,
+        title: String,
+        subtitle: String,
+        isOn: Binding<Bool>
+    ) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(iconColor)
+                .frame(width: 28, height: 28)
+                .background(iconColor.opacity(0.15))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(AppFont.body(14, weight: .semibold))
+                    .foregroundColor(.textPrimary)
+                Text(subtitle)
+                    .font(AppFont.body(11))
+                    .foregroundColor(.textMuted)
+            }
+
+            Spacer()
+
+            Toggle("", isOn: isOn)
+                .labelsHidden()
+                .tint(.appGreen)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 
     // MARK: - Security Section
