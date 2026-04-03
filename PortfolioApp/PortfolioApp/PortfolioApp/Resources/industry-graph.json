@@ -164,5 +164,791 @@
         "Uncategorized"
       ]
     }
-  ]
+  ],
+  "companies": {
+    "AAPL": {
+      "name": "Apple Inc.",
+      "sector": "technology",
+      "industry": "Hardware",
+      "upstream": ["TSM", "AVGO", "QCOM", "MU", "SWKS", "AMAT"],
+      "downstream": ["TMUS", "VZ", "T"]
+    },
+    "MSFT": {
+      "name": "Microsoft Corp.",
+      "sector": "technology",
+      "industry": "Cloud Services",
+      "upstream": ["NVDA", "AMD", "INTC", "AMAT"],
+      "downstream": ["CRM", "NOW", "ADBE", "SNOW"]
+    },
+    "GOOGL": {
+      "name": "Alphabet Inc.",
+      "sector": "technology",
+      "industry": "Software",
+      "upstream": ["NVDA", "TSM", "AMAT"],
+      "downstream": ["TTD", "SNAP", "PINS", "META"]
+    },
+    "GOOG": {
+      "name": "Alphabet Inc. (Class C)",
+      "sector": "technology",
+      "industry": "Software",
+      "upstream": ["NVDA", "TSM", "AMAT"],
+      "downstream": ["TTD", "SNAP", "PINS", "META"]
+    },
+    "AMZN": {
+      "name": "Amazon.com Inc.",
+      "sector": "consumer_discretionary",
+      "industry": "E-Commerce",
+      "upstream": ["NVDA", "AMD", "MU", "QCOM"],
+      "downstream": ["FDX", "UPS", "CRM", "SNOW"]
+    },
+    "META": {
+      "name": "Meta Platforms Inc.",
+      "sector": "communication_services",
+      "industry": "Social Media",
+      "upstream": ["NVDA", "TSM", "AMAT"],
+      "downstream": ["TTD", "SNAP", "PINS"]
+    },
+    "NVDA": {
+      "name": "NVIDIA Corp.",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": ["TSM", "ASML", "AMAT", "LRCX", "MU"],
+      "downstream": ["MSFT", "GOOGL", "META", "AMZN", "TSLA", "ORCL"]
+    },
+    "TSLA": {
+      "name": "Tesla Inc.",
+      "sector": "consumer_discretionary",
+      "industry": "Automotive",
+      "upstream": ["NVDA", "ALB", "TXN", "PANASONIC"],
+      "downstream": ["CHPT", "EVGO"]
+    },
+    "AMD": {
+      "name": "Advanced Micro Devices",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": ["TSM", "ASML", "AMAT", "MU"],
+      "downstream": ["MSFT", "GOOGL", "AMZN", "DELL", "HPQ"]
+    },
+    "INTC": {
+      "name": "Intel Corp.",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": ["ASML", "AMAT", "LRCX", "KLAC"],
+      "downstream": ["DELL", "HPQ", "MSFT", "LENOVO"]
+    },
+    "QCOM": {
+      "name": "Qualcomm Inc.",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": ["TSM", "ASML", "AMAT"],
+      "downstream": ["AAPL", "TMUS", "VZ", "T"]
+    },
+    "AVGO": {
+      "name": "Broadcom Inc.",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": ["TSM", "ASML"],
+      "downstream": ["AAPL", "CSCO", "AMZN", "GOOGL"]
+    },
+    "TSM": {
+      "name": "Taiwan Semiconductor",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": ["ASML", "AMAT", "LRCX", "KLAC"],
+      "downstream": ["NVDA", "AAPL", "AMD", "QCOM", "AVGO", "ARM", "MRVL"]
+    },
+    "ASML": {
+      "name": "ASML Holding",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": [],
+      "downstream": ["TSM", "INTC", "MU", "SMSN"]
+    },
+    "AMAT": {
+      "name": "Applied Materials",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": [],
+      "downstream": ["TSM", "INTC", "MU", "LRCX"]
+    },
+    "LRCX": {
+      "name": "Lam Research",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": [],
+      "downstream": ["TSM", "INTC", "MU", "AMAT"]
+    },
+    "KLAC": {
+      "name": "KLA Corp.",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": [],
+      "downstream": ["TSM", "INTC", "MU", "AMAT", "LRCX"]
+    },
+    "MU": {
+      "name": "Micron Technology",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": ["ASML", "AMAT", "LRCX"],
+      "downstream": ["NVDA", "AAPL", "DELL", "MSFT", "AMZN"]
+    },
+    "TXN": {
+      "name": "Texas Instruments",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": ["ASML", "AMAT"],
+      "downstream": ["F", "GM", "TSLA", "CAT", "DE"]
+    },
+    "MRVL": {
+      "name": "Marvell Technology",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": ["TSM", "ASML"],
+      "downstream": ["AMZN", "CSCO", "MSFT"]
+    },
+    "ARM": {
+      "name": "Arm Holdings",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": ["TSM"],
+      "downstream": ["AAPL", "QCOM", "NVDA", "AMD", "MRVL"]
+    },
+    "SWKS": {
+      "name": "Skyworks Solutions",
+      "sector": "technology",
+      "industry": "Semiconductors",
+      "upstream": ["TSM", "AMAT"],
+      "downstream": ["AAPL", "TMUS", "VZ"]
+    },
+    "CRM": {
+      "name": "Salesforce Inc.",
+      "sector": "technology",
+      "industry": "Software",
+      "upstream": ["AMZN", "MSFT", "GOOGL"],
+      "downstream": []
+    },
+    "ORCL": {
+      "name": "Oracle Corp.",
+      "sector": "technology",
+      "industry": "Software",
+      "upstream": ["NVDA", "AMD"],
+      "downstream": ["JPM", "BAC", "GS", "WFC"]
+    },
+    "ADBE": {
+      "name": "Adobe Inc.",
+      "sector": "technology",
+      "industry": "Software",
+      "upstream": ["AMZN", "MSFT", "NVDA"],
+      "downstream": ["NFLX", "DIS"]
+    },
+    "CSCO": {
+      "name": "Cisco Systems",
+      "sector": "technology",
+      "industry": "Networking",
+      "upstream": ["AVGO", "MRVL", "QCOM"],
+      "downstream": ["TMUS", "VZ", "T", "EQIX"]
+    },
+    "IBM": {
+      "name": "IBM Corp.",
+      "sector": "technology",
+      "industry": "IT Services",
+      "upstream": ["NVDA", "AMD"],
+      "downstream": ["JPM", "BAC", "GS"]
+    },
+    "NOW": {
+      "name": "ServiceNow Inc.",
+      "sector": "technology",
+      "industry": "Software",
+      "upstream": ["AMZN", "MSFT", "GOOGL"],
+      "downstream": []
+    },
+    "INTU": {
+      "name": "Intuit Inc.",
+      "sector": "technology",
+      "industry": "Software",
+      "upstream": ["AMZN", "MSFT"],
+      "downstream": []
+    },
+    "SNOW": {
+      "name": "Snowflake Inc.",
+      "sector": "technology",
+      "industry": "Cloud Services",
+      "upstream": ["AMZN", "MSFT", "GOOGL"],
+      "downstream": []
+    },
+    "PLTR": {
+      "name": "Palantir Technologies",
+      "sector": "technology",
+      "industry": "Artificial Intelligence",
+      "upstream": ["AMZN", "MSFT", "GOOGL"],
+      "downstream": []
+    },
+    "NET": {
+      "name": "Cloudflare Inc.",
+      "sector": "technology",
+      "industry": "Cybersecurity",
+      "upstream": ["AMZN", "MSFT", "GOOGL"],
+      "downstream": []
+    },
+    "NFLX": {
+      "name": "Netflix Inc.",
+      "sector": "communication_services",
+      "industry": "Streaming",
+      "upstream": ["AMZN", "MSFT", "NVDA"],
+      "downstream": []
+    },
+    "DIS": {
+      "name": "Walt Disney Co.",
+      "sector": "communication_services",
+      "industry": "Streaming",
+      "upstream": ["AMZN", "NVDA"],
+      "downstream": []
+    },
+    "TMUS": {
+      "name": "T-Mobile US",
+      "sector": "communication_services",
+      "industry": "Telecom",
+      "upstream": ["QCOM", "AAPL", "CSCO"],
+      "downstream": []
+    },
+    "VZ": {
+      "name": "Verizon Communications",
+      "sector": "communication_services",
+      "industry": "Telecom",
+      "upstream": ["QCOM", "AAPL", "CSCO"],
+      "downstream": []
+    },
+    "T": {
+      "name": "AT&T Inc.",
+      "sector": "communication_services",
+      "industry": "Telecom",
+      "upstream": ["QCOM", "AAPL", "CSCO"],
+      "downstream": []
+    },
+    "SNAP": {
+      "name": "Snap Inc.",
+      "sector": "communication_services",
+      "industry": "Social Media",
+      "upstream": ["GOOGL", "META", "AMZN"],
+      "downstream": []
+    },
+    "PINS": {
+      "name": "Pinterest Inc.",
+      "sector": "communication_services",
+      "industry": "Social Media",
+      "upstream": ["GOOGL", "META", "AMZN"],
+      "downstream": []
+    },
+    "TTD": {
+      "name": "The Trade Desk",
+      "sector": "communication_services",
+      "industry": "Advertising",
+      "upstream": ["GOOGL", "META", "AMZN"],
+      "downstream": []
+    },
+    "CMCSA": {
+      "name": "Comcast Corp.",
+      "sector": "communication_services",
+      "industry": "Telecom",
+      "upstream": ["CSCO", "QCOM", "AAPL"],
+      "downstream": []
+    },
+    "JNJ": {
+      "name": "Johnson & Johnson",
+      "sector": "healthcare",
+      "industry": "Pharmaceuticals",
+      "upstream": [],
+      "downstream": ["CVS", "MCK", "UNH"]
+    },
+    "LLY": {
+      "name": "Eli Lilly and Co.",
+      "sector": "healthcare",
+      "industry": "Pharmaceuticals",
+      "upstream": [],
+      "downstream": ["CVS", "MCK", "UNH"]
+    },
+    "PFE": {
+      "name": "Pfizer Inc.",
+      "sector": "healthcare",
+      "industry": "Pharmaceuticals",
+      "upstream": [],
+      "downstream": ["CVS", "MCK", "UNH"]
+    },
+    "ABBV": {
+      "name": "AbbVie Inc.",
+      "sector": "healthcare",
+      "industry": "Pharmaceuticals",
+      "upstream": [],
+      "downstream": ["CVS", "MCK", "UNH"]
+    },
+    "MRK": {
+      "name": "Merck & Co.",
+      "sector": "healthcare",
+      "industry": "Pharmaceuticals",
+      "upstream": [],
+      "downstream": ["CVS", "MCK", "UNH"]
+    },
+    "UNH": {
+      "name": "UnitedHealth Group",
+      "sector": "healthcare",
+      "industry": "Health Insurance",
+      "upstream": ["JNJ", "LLY", "PFE", "ABBV", "MRK"],
+      "downstream": ["CVS", "MCK"]
+    },
+    "CVS": {
+      "name": "CVS Health Corp.",
+      "sector": "healthcare",
+      "industry": "Pharmaceuticals",
+      "upstream": ["JNJ", "PFE", "LLY", "ABBV", "MRK", "MCK"],
+      "downstream": []
+    },
+    "MCK": {
+      "name": "McKesson Corp.",
+      "sector": "healthcare",
+      "industry": "Pharmaceuticals",
+      "upstream": ["JNJ", "PFE", "LLY", "ABBV", "MRK"],
+      "downstream": ["CVS"]
+    },
+    "ABT": {
+      "name": "Abbott Laboratories",
+      "sector": "healthcare",
+      "industry": "Medical Devices",
+      "upstream": ["AVGO"],
+      "downstream": ["UNH", "CVS"]
+    },
+    "MDT": {
+      "name": "Medtronic plc",
+      "sector": "healthcare",
+      "industry": "Medical Devices",
+      "upstream": [],
+      "downstream": ["UNH"]
+    },
+    "JPM": {
+      "name": "JPMorgan Chase & Co.",
+      "sector": "financials",
+      "industry": "Banking",
+      "upstream": ["ORCL", "IBM", "MSFT"],
+      "downstream": ["V", "MA"]
+    },
+    "BAC": {
+      "name": "Bank of America Corp.",
+      "sector": "financials",
+      "industry": "Banking",
+      "upstream": ["ORCL", "IBM", "MSFT"],
+      "downstream": ["V", "MA"]
+    },
+    "GS": {
+      "name": "Goldman Sachs Group",
+      "sector": "financials",
+      "industry": "Investment Banking",
+      "upstream": ["ORCL", "IBM", "MSFT"],
+      "downstream": ["V", "MA"]
+    },
+    "MS": {
+      "name": "Morgan Stanley",
+      "sector": "financials",
+      "industry": "Investment Banking",
+      "upstream": ["ORCL", "IBM", "MSFT"],
+      "downstream": []
+    },
+    "WFC": {
+      "name": "Wells Fargo & Co.",
+      "sector": "financials",
+      "industry": "Banking",
+      "upstream": ["ORCL", "IBM", "MSFT"],
+      "downstream": ["V", "MA"]
+    },
+    "C": {
+      "name": "Citigroup Inc.",
+      "sector": "financials",
+      "industry": "Banking",
+      "upstream": ["ORCL", "IBM", "MSFT"],
+      "downstream": ["V", "MA"]
+    },
+    "V": {
+      "name": "Visa Inc.",
+      "sector": "financials",
+      "industry": "Payments",
+      "upstream": ["JPM", "BAC", "WFC", "GS", "C"],
+      "downstream": ["WMT", "AMZN", "TGT", "COST"]
+    },
+    "MA": {
+      "name": "Mastercard Inc.",
+      "sector": "financials",
+      "industry": "Payments",
+      "upstream": ["JPM", "BAC", "WFC", "GS", "C"],
+      "downstream": ["WMT", "AMZN", "TGT", "COST"]
+    },
+    "AXP": {
+      "name": "American Express Co.",
+      "sector": "financials",
+      "industry": "Payments",
+      "upstream": ["JPM", "BAC"],
+      "downstream": ["WMT", "COST", "AAL", "DAL"]
+    },
+    "BLK": {
+      "name": "BlackRock Inc.",
+      "sector": "financials",
+      "industry": "Asset Management",
+      "upstream": ["ORCL", "MSFT"],
+      "downstream": []
+    },
+    "SCHW": {
+      "name": "Charles Schwab Corp.",
+      "sector": "financials",
+      "industry": "Fintech",
+      "upstream": ["MSFT", "ORCL"],
+      "downstream": []
+    },
+    "COIN": {
+      "name": "Coinbase Global Inc.",
+      "sector": "financials",
+      "industry": "Fintech",
+      "upstream": ["AMZN", "MSFT"],
+      "downstream": []
+    },
+    "HD": {
+      "name": "Home Depot Inc.",
+      "sector": "consumer_discretionary",
+      "industry": "Retail",
+      "upstream": ["SHW", "MMM", "CARR"],
+      "downstream": []
+    },
+    "LOW": {
+      "name": "Lowe's Companies",
+      "sector": "consumer_discretionary",
+      "industry": "Retail",
+      "upstream": ["SHW", "MMM", "CARR"],
+      "downstream": []
+    },
+    "NKE": {
+      "name": "Nike Inc.",
+      "sector": "consumer_discretionary",
+      "industry": "Apparel",
+      "upstream": [],
+      "downstream": ["FL", "DKS"]
+    },
+    "MCD": {
+      "name": "McDonald's Corp.",
+      "sector": "consumer_discretionary",
+      "industry": "Restaurants",
+      "upstream": ["KO", "PEP", "SYY"],
+      "downstream": []
+    },
+    "SBUX": {
+      "name": "Starbucks Corp.",
+      "sector": "consumer_discretionary",
+      "industry": "Restaurants",
+      "upstream": ["SYY"],
+      "downstream": []
+    },
+    "TGT": {
+      "name": "Target Corp.",
+      "sector": "consumer_discretionary",
+      "industry": "Retail",
+      "upstream": ["PG", "KO", "PEP", "NKE"],
+      "downstream": []
+    },
+    "WMT": {
+      "name": "Walmart Inc.",
+      "sector": "consumer_staples",
+      "industry": "Grocery",
+      "upstream": ["PG", "KO", "PEP", "JNJ", "NKE"],
+      "downstream": ["FDX", "UPS"]
+    },
+    "COST": {
+      "name": "Costco Wholesale Corp.",
+      "sector": "consumer_staples",
+      "industry": "Grocery",
+      "upstream": ["PG", "KO", "PEP", "NKE"],
+      "downstream": []
+    },
+    "PG": {
+      "name": "Procter & Gamble Co.",
+      "sector": "consumer_staples",
+      "industry": "Household Products",
+      "upstream": [],
+      "downstream": ["WMT", "TGT", "COST", "AMZN"]
+    },
+    "KO": {
+      "name": "Coca-Cola Co.",
+      "sector": "consumer_staples",
+      "industry": "Food & Beverage",
+      "upstream": ["AA"],
+      "downstream": ["MCD", "WMT", "YUM"]
+    },
+    "PEP": {
+      "name": "PepsiCo Inc.",
+      "sector": "consumer_staples",
+      "industry": "Food & Beverage",
+      "upstream": ["AA"],
+      "downstream": ["WMT", "MCD", "YUM", "SYY"]
+    },
+    "SYY": {
+      "name": "Sysco Corp.",
+      "sector": "consumer_staples",
+      "industry": "Food & Beverage",
+      "upstream": ["TSN", "KHC"],
+      "downstream": ["MCD", "SBUX", "YUM"]
+    },
+    "YUM": {
+      "name": "Yum! Brands Inc.",
+      "sector": "consumer_discretionary",
+      "industry": "Restaurants",
+      "upstream": ["KO", "PEP", "SYY"],
+      "downstream": []
+    },
+    "BA": {
+      "name": "Boeing Co.",
+      "sector": "industrials",
+      "industry": "Aerospace & Defense",
+      "upstream": ["AA", "RTX", "HII"],
+      "downstream": ["AAL", "DAL", "UAL"]
+    },
+    "LMT": {
+      "name": "Lockheed Martin Corp.",
+      "sector": "industrials",
+      "industry": "Aerospace & Defense",
+      "upstream": ["RTX", "GD"],
+      "downstream": []
+    },
+    "RTX": {
+      "name": "RTX Corp.",
+      "sector": "industrials",
+      "industry": "Aerospace & Defense",
+      "upstream": [],
+      "downstream": ["BA", "LMT", "AAL", "DAL", "UAL"]
+    },
+    "GD": {
+      "name": "General Dynamics Corp.",
+      "sector": "industrials",
+      "industry": "Aerospace & Defense",
+      "upstream": [],
+      "downstream": ["LMT"]
+    },
+    "UPS": {
+      "name": "United Parcel Service",
+      "sector": "industrials",
+      "industry": "Logistics",
+      "upstream": ["AMZN", "WMT"],
+      "downstream": []
+    },
+    "FDX": {
+      "name": "FedEx Corp.",
+      "sector": "industrials",
+      "industry": "Logistics",
+      "upstream": ["AMZN", "WMT"],
+      "downstream": []
+    },
+    "AAL": {
+      "name": "American Airlines Group",
+      "sector": "industrials",
+      "industry": "Transportation",
+      "upstream": ["XOM", "CVX", "VLO", "BA", "RTX"],
+      "downstream": []
+    },
+    "DAL": {
+      "name": "Delta Air Lines",
+      "sector": "industrials",
+      "industry": "Transportation",
+      "upstream": ["XOM", "CVX", "VLO", "BA", "RTX"],
+      "downstream": []
+    },
+    "UAL": {
+      "name": "United Airlines Holdings",
+      "sector": "industrials",
+      "industry": "Transportation",
+      "upstream": ["XOM", "CVX", "VLO", "BA", "RTX"],
+      "downstream": []
+    },
+    "CAT": {
+      "name": "Caterpillar Inc.",
+      "sector": "industrials",
+      "industry": "Manufacturing",
+      "upstream": ["NUE", "TXN"],
+      "downstream": []
+    },
+    "DE": {
+      "name": "Deere & Company",
+      "sector": "industrials",
+      "industry": "Manufacturing",
+      "upstream": ["NUE", "TXN"],
+      "downstream": []
+    },
+    "XOM": {
+      "name": "Exxon Mobil Corp.",
+      "sector": "energy",
+      "industry": "Oil & Gas",
+      "upstream": ["SLB", "HAL", "BKR"],
+      "downstream": ["VLO", "MPC", "PSX", "AAL", "DAL", "UAL"]
+    },
+    "CVX": {
+      "name": "Chevron Corp.",
+      "sector": "energy",
+      "industry": "Oil & Gas",
+      "upstream": ["SLB", "HAL", "BKR"],
+      "downstream": ["VLO", "MPC", "PSX"]
+    },
+    "COP": {
+      "name": "ConocoPhillips",
+      "sector": "energy",
+      "industry": "Oil & Gas",
+      "upstream": ["SLB", "HAL", "BKR"],
+      "downstream": ["VLO", "PSX"]
+    },
+    "SLB": {
+      "name": "SLB (Schlumberger)",
+      "sector": "energy",
+      "industry": "Oil & Gas",
+      "upstream": [],
+      "downstream": ["XOM", "CVX", "COP"]
+    },
+    "HAL": {
+      "name": "Halliburton Co.",
+      "sector": "energy",
+      "industry": "Oil & Gas",
+      "upstream": [],
+      "downstream": ["XOM", "CVX", "COP"]
+    },
+    "BKR": {
+      "name": "Baker Hughes Co.",
+      "sector": "energy",
+      "industry": "Oil & Gas",
+      "upstream": [],
+      "downstream": ["XOM", "CVX", "COP"]
+    },
+    "VLO": {
+      "name": "Valero Energy Corp.",
+      "sector": "energy",
+      "industry": "Oil & Gas",
+      "upstream": ["XOM", "CVX", "COP"],
+      "downstream": ["AAL", "DAL", "UAL"]
+    },
+    "MPC": {
+      "name": "Marathon Petroleum Corp.",
+      "sector": "energy",
+      "industry": "Oil & Gas",
+      "upstream": ["XOM", "CVX", "COP"],
+      "downstream": ["AAL", "DAL", "UAL"]
+    },
+    "PSX": {
+      "name": "Phillips 66",
+      "sector": "energy",
+      "industry": "Oil & Gas",
+      "upstream": ["XOM", "CVX", "COP"],
+      "downstream": []
+    },
+    "NEE": {
+      "name": "NextEra Energy Inc.",
+      "sector": "utilities",
+      "industry": "Electric Utilities",
+      "upstream": [],
+      "downstream": []
+    },
+    "ALB": {
+      "name": "Albemarle Corp.",
+      "sector": "materials",
+      "industry": "Metals & Mining",
+      "upstream": [],
+      "downstream": ["TSLA", "F", "GM"]
+    },
+    "AA": {
+      "name": "Alcoa Corp.",
+      "sector": "materials",
+      "industry": "Metals & Mining",
+      "upstream": ["NEE", "XOM"],
+      "downstream": ["AAPL", "BA", "F", "GM", "KO", "PEP"]
+    },
+    "NUE": {
+      "name": "Nucor Corp.",
+      "sector": "materials",
+      "industry": "Metals & Mining",
+      "upstream": [],
+      "downstream": ["CAT", "DE", "F", "GM", "BA"]
+    },
+    "SHW": {
+      "name": "Sherwin-Williams Co.",
+      "sector": "materials",
+      "industry": "Chemicals",
+      "upstream": [],
+      "downstream": ["HD", "LOW"]
+    },
+    "LIN": {
+      "name": "Linde plc",
+      "sector": "materials",
+      "industry": "Chemicals",
+      "upstream": ["NEE", "XOM"],
+      "downstream": ["TSM", "INTC", "MU"]
+    },
+    "F": {
+      "name": "Ford Motor Co.",
+      "sector": "consumer_discretionary",
+      "industry": "Automotive",
+      "upstream": ["TXN", "QCOM", "ALB", "NUE", "AA"],
+      "downstream": []
+    },
+    "GM": {
+      "name": "General Motors Co.",
+      "sector": "consumer_discretionary",
+      "industry": "Automotive",
+      "upstream": ["TXN", "QCOM", "ALB", "NUE", "AA"],
+      "downstream": []
+    },
+    "EQIX": {
+      "name": "Equinix Inc.",
+      "sector": "real_estate",
+      "industry": "Data Center REITs",
+      "upstream": ["NVDA", "CSCO", "AMZN"],
+      "downstream": ["MSFT", "GOOGL", "META"]
+    },
+    "AMT": {
+      "name": "American Tower Corp.",
+      "sector": "real_estate",
+      "industry": "Commercial REITs",
+      "upstream": ["QCOM", "CSCO"],
+      "downstream": ["TMUS", "VZ", "T"]
+    },
+    "FL": {
+      "name": "Foot Locker Inc.",
+      "sector": "consumer_discretionary",
+      "industry": "Retail",
+      "upstream": ["NKE"],
+      "downstream": []
+    },
+    "DKS": {
+      "name": "Dick's Sporting Goods",
+      "sector": "consumer_discretionary",
+      "industry": "Retail",
+      "upstream": ["NKE"],
+      "downstream": []
+    },
+    "TSN": {
+      "name": "Tyson Foods Inc.",
+      "sector": "consumer_staples",
+      "industry": "Food & Beverage",
+      "upstream": [],
+      "downstream": ["SYY", "WMT", "COST"]
+    },
+    "KHC": {
+      "name": "Kraft Heinz Co.",
+      "sector": "consumer_staples",
+      "industry": "Food & Beverage",
+      "upstream": [],
+      "downstream": ["WMT", "TGT", "COST", "SYY"]
+    },
+    "CARR": {
+      "name": "Carrier Global Corp.",
+      "sector": "industrials",
+      "industry": "Manufacturing",
+      "upstream": [],
+      "downstream": ["HD", "LOW"]
+    },
+    "HII": {
+      "name": "Huntington Ingalls Industries",
+      "sector": "industrials",
+      "industry": "Aerospace & Defense",
+      "upstream": ["NUE", "AA"],
+      "downstream": ["BA", "LMT"]
+    }
+  }
 }

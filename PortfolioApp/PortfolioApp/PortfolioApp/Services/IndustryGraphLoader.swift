@@ -11,10 +11,52 @@ struct IndustrySector: Codable, Identifiable {
     var id: String { key }
 }
 
+/// Per-symbol supply chain node. Upstream = suppliers; downstream = customers/dependents.
+struct CompanyNode: Codable, Identifiable {
+    let symbol:     String
+    let name:       String
+    let sector:     String      // matches IndustrySector.key
+    let industry:   String
+    let upstream:   [String]    // ticker symbols that supply to this company
+    let downstream: [String]    // ticker symbols that depend on this company
+
+    var id: String { symbol }
+}
+
 struct IndustryGraph: Codable {
     let version:   String
     let updatedAt: String
     let sectors:   [IndustrySector]
+    let companies: [String: CompanyNodeRaw]
+
+    // Decode companies as a flat dict, then hydrate with symbol key
+    func companyNode(for symbol: String) -> CompanyNode? {
+        guard let raw = companies[symbol] else { return nil }
+        return CompanyNode(
+            symbol:     symbol,
+            name:       raw.name,
+            sector:     raw.sector,
+            industry:   raw.industry,
+            upstream:   raw.upstream,
+            downstream: raw.downstream
+        )
+    }
+
+    func allCompanyNodes() -> [CompanyNode] {
+        companies.map { key, raw in
+            CompanyNode(symbol: key, name: raw.name, sector: raw.sector,
+                        industry: raw.industry, upstream: raw.upstream, downstream: raw.downstream)
+        }.sorted { $0.symbol < $1.symbol }
+    }
+}
+
+/// Intermediate decodable — symbol comes from the dictionary key, not from the JSON value.
+struct CompanyNodeRaw: Codable {
+    let name:       String
+    let sector:     String
+    let industry:   String
+    let upstream:   [String]
+    let downstream: [String]
 }
 
 // MARK: - IndustryGraphLoader
@@ -39,12 +81,14 @@ enum IndustryGraphLoader {
         }
     }
 
+    // MARK: - Sector Helpers
+
     /// Returns the sector that contains `industry`, or nil if not found.
     static func sector(for industry: String) -> IndustrySector? {
         load().sectors.first { $0.industries.contains(industry) }
     }
 
-    /// Returns all sector names sorted by their order in the JSON.
+    /// Returns all sectors in JSON order.
     static func allSectors() -> [IndustrySector] {
         load().sectors
     }
@@ -57,5 +101,34 @@ enum IndustryGraphLoader {
     /// Returns industries for a specific sector key.
     static func industries(for sectorKey: String) -> [String] {
         load().sectors.first { $0.key == sectorKey }?.industries ?? []
+    }
+
+    // MARK: - Company Helpers
+
+    /// Returns the CompanyNode for a given ticker symbol, or nil if not in the graph.
+    static func company(for symbol: String) -> CompanyNode? {
+        load().companyNode(for: symbol)
+    }
+
+    /// Returns all companies in the graph sorted by symbol.
+    static func allCompanies() -> [CompanyNode] {
+        load().allCompanyNodes()
+    }
+
+    /// Returns companies that list `symbol` in their downstream array (i.e. direct customers).
+    static func upstreamNodes(for symbol: String) -> [CompanyNode] {
+        guard let node = company(for: symbol) else { return [] }
+        return node.upstream.compactMap { company(for: $0) }
+    }
+
+    /// Returns companies that list `symbol` in their upstream array (i.e. direct dependents).
+    static func downstreamNodes(for symbol: String) -> [CompanyNode] {
+        guard let node = company(for: symbol) else { return [] }
+        return node.downstream.compactMap { company(for: $0) }
+    }
+
+    /// Returns the sector color hex string for a given sector key.
+    static func sectorColor(for key: String) -> String {
+        load().sectors.first { $0.key == key }?.color ?? "#888888"
     }
 }
