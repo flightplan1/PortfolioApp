@@ -133,6 +133,9 @@ struct AllocationsView: View {
                         if !holdingWeights.isEmpty {
                             holdingsCard
                         }
+                        if !concentrationRisks.isEmpty {
+                            concentrationRiskCard
+                        }
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -312,6 +315,116 @@ struct AllocationsView: View {
             .padding(.bottom, 8)
         }
         .cardStyle()
+    }
+
+    // MARK: - Concentration Risk
+
+    struct ConcentrationRisk: Identifiable {
+        let id = UUID()
+        let upstreamSymbol: String
+        let upstreamName: String
+        let dependentSymbols: [String]   // held symbols that depend on it
+        let combinedWeightPct: Double    // combined portfolio % of those dependents
+    }
+
+    private var concentrationRisks: [ConcentrationRisk] {
+        let stockSymbols = holdingWeights
+            .filter { $0.assetType == .stock || $0.assetType == .etf }
+            .map { $0.symbol }
+        let weightMap: [String: Double] = Dictionary(
+            uniqueKeysWithValues: holdingWeights.map { ($0.symbol, $0.weightPct) }
+        )
+
+        // Map upstream → which held symbols depend on it
+        var upstreamToDependents: [String: [String]] = [:]
+        for symbol in stockSymbols {
+            for upstream in IndustryGraphLoader.company(for: symbol)?.upstream ?? [] {
+                upstreamToDependents[upstream, default: []].append(symbol)
+            }
+        }
+
+        return upstreamToDependents
+            .filter { $0.value.count >= 2 }
+            .compactMap { upstreamSymbol, dependents in
+                let combined = dependents.reduce(0.0) { $0 + (weightMap[$1] ?? 0) }
+                guard combined > 5 else { return nil }  // only warn if >5% combined
+                let name = IndustryGraphLoader.company(for: upstreamSymbol)?.name ?? upstreamSymbol
+                return ConcentrationRisk(
+                    upstreamSymbol: upstreamSymbol,
+                    upstreamName: name,
+                    dependentSymbols: dependents.sorted(),
+                    combinedWeightPct: combined
+                )
+            }
+            .sorted { $0.combinedWeightPct > $1.combinedWeightPct }
+            .prefix(5)
+            .map { $0 }
+    }
+
+    private var concentrationRiskCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(.appGold)
+                Text("SUPPLY CHAIN CONCENTRATION RISKS")
+                    .sectionTitleStyle()
+            }
+            .padding(.horizontal, 4)
+
+            VStack(spacing: 0) {
+                ForEach(Array(concentrationRisks.enumerated()), id: \.element.id) { index, risk in
+                    if index > 0 { Divider().background(Color.appBorder) }
+                    concentrationRiskRow(risk)
+                }
+            }
+            .cardStyle()
+
+            Text("Multiple holdings share a dependency on the same upstream company. A disruption to that supplier could affect all of them simultaneously.")
+                .font(AppFont.body(11))
+                .foregroundColor(.textMuted)
+                .padding(.horizontal, 4)
+        }
+    }
+
+    private func concentrationRiskRow(_ risk: ConcentrationRisk) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(risk.upstreamName.isEmpty ? risk.upstreamSymbol : risk.upstreamName)
+                        .font(AppFont.body(13, weight: .semibold))
+                        .foregroundColor(.textPrimary)
+                    Text("\(risk.dependentSymbols.joined(separator: ", ")) all depend on \(risk.upstreamSymbol)")
+                        .font(AppFont.body(11))
+                        .foregroundColor(.textMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(String(format: "%.1f%%", risk.combinedWeightPct))
+                        .font(AppFont.mono(13, weight: .bold))
+                        .foregroundColor(.appGold)
+                    Text("of portfolio")
+                        .font(AppFont.mono(9))
+                        .foregroundColor(.textMuted)
+                }
+            }
+
+            // Dependent symbol chips
+            HStack(spacing: 6) {
+                ForEach(risk.dependentSymbols, id: \.self) { sym in
+                    Text(sym)
+                        .font(AppFont.mono(10, weight: .bold))
+                        .foregroundColor(.appGold)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Color.appGoldDim)
+                        .clipShape(Capsule())
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 
     // MARK: - Empty State

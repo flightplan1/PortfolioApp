@@ -227,6 +227,9 @@ struct PositionDetailView: View {
                     if !closedLots.isEmpty {
                         closedLotsCard
                     }
+                    if holding.assetType == .stock || holding.assetType == .etf {
+                        IndustryDetailCard(symbol: holding.symbol)
+                    }
                 }
                 .padding(16)
                 .padding(.bottom, 16)
