@@ -33,6 +33,8 @@ struct PositionDetailView: View {
     @State private var splitToRevert: SplitEvent?
     @State private var showRevertAlert = false
     @State private var revertAlertMessage = ""
+    @State private var noteDraft: String = ""
+    @State private var isEditingNote: Bool = false
 
     // MARK: - Undo Toast
     @State private var undoToastVisible  = false
@@ -230,7 +232,9 @@ struct PositionDetailView: View {
                     if holding.assetType == .stock || holding.assetType == .etf {
                         IndustryDetailCard(symbol: holding.symbol)
                     }
+                    notesCard
                 }
+                .onAppear { noteDraft = holding.notes ?? "" }
                 .padding(16)
                 .padding(.bottom, 16)
             }
@@ -765,6 +769,66 @@ struct PositionDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Notes Card
+
+    private var notesCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("NOTES")
+                .sectionTitleStyle()
+                .padding(.horizontal, 4)
+
+            VStack(alignment: .leading, spacing: 0) {
+                if isEditingNote {
+                    TextEditor(text: $noteDraft)
+                        .font(AppFont.body(14))
+                        .foregroundColor(.textPrimary)
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
+                        .frame(minHeight: 80)
+                        .padding(16)
+
+                    Divider().background(Color.appBorder)
+
+                    HStack {
+                        Spacer()
+                        Button("Done") {
+                            holding.notes = noteDraft.isEmpty ? nil : noteDraft
+                            try? context.save()
+                            isEditingNote = false
+                        }
+                        .font(AppFont.body(13, weight: .semibold))
+                        .foregroundColor(.appBlue)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                    }
+                } else {
+                    Button {
+                        noteDraft = holding.notes ?? ""
+                        isEditingNote = true
+                    } label: {
+                        HStack(spacing: 10) {
+                            Text(holding.notes?.isEmpty == false ? holding.notes! : "Tap to add a note…")
+                                .font(AppFont.body(14))
+                                .foregroundColor(holding.notes?.isEmpty == false ? .textPrimary : .textMuted)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .multilineTextAlignment(.leading)
+                            Image(systemName: "pencil")
+                                .font(.system(size: 12))
+                                .foregroundColor(.textMuted)
+                        }
+                        .padding(16)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .background(Color.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(
+                isEditingNote ? Color.appBlue.opacity(0.5) : Color.appBorder, lineWidth: 1)
+            )
+        }
     }
 
     // MARK: - Delete

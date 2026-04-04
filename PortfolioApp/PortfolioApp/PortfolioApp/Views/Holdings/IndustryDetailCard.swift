@@ -1,19 +1,23 @@
 import SwiftUI
-import Charts
 import CoreData
 
 // MARK: - IndustryDetailCard
-// Shows the upstream/downstream supply chain for a stock or ETF holding.
-// Displays "In Portfolio" badges when a dependency is also held.
-// Shown at the bottom of PositionDetailView for stock/ETF asset types.
+// Single code path for all symbols:
+//   - Static graph entry (industry-graph.json): shows upstream/downstream chains.
+//   - Dynamic entry (user-graph.json via Finnhub): shows industry info + peer group.
+//   - Not yet fetched: triggers a just-in-time fetch via DynamicGraphService.
 
 struct IndustryDetailCard: View {
 
     let symbol: String
 
-    // All active holdings — used to determine "In Portfolio" badges.
     @FetchRequest(fetchRequest: Holding.allActiveRequest(), animation: .none)
     private var allHoldings: FetchedResults<Holding>
+
+    // Observing isSyncing triggers a re-render when DynamicGraphService completes a fetch,
+    // causing `node` to re-evaluate and pick up the newly written user-graph entry.
+    @ObservedObject private var dynamicGraph = DynamicGraphService.shared
+    @State private var isLoadingJIT: Bool = false
 
     // MARK: - Computed
 
@@ -21,6 +25,7 @@ struct IndustryDetailCard: View {
         Set(allHoldings.map { $0.symbol })
     }
 
+    /// Checks static graph first, then user-graph.json (via DynamicGraphService write).
     private var node: CompanyNode? {
         IndustryGraphLoader.company(for: symbol)
     }
@@ -37,12 +42,8 @@ struct IndustryDetailCard: View {
         var counts: [String: Int] = [:]
         for n in downstreamNodes { counts[n.sector, default: 0] += 1 }
         let graph = IndustryGraphLoader.load()
-        let sectorNames: [String: String] = Dictionary(
-            uniqueKeysWithValues: graph.sectors.map { ($0.key, $0.name) }
-        )
-        let sectorColors: [String: String] = Dictionary(
-            uniqueKeysWithValues: graph.sectors.map { ($0.key, $0.color) }
-        )
+        let sectorNames  = Dictionary(uniqueKeysWithValues: graph.sectors.map { ($0.key, $0.name) })
+        let sectorColors = Dictionary(uniqueKeysWithValues: graph.sectors.map { ($0.key, $0.color) })
         return counts
             .sorted { $0.value > $1.value }
             .map { (sector: $0.key,
@@ -60,43 +61,74 @@ struct IndustryDetailCard: View {
                 .padding(.horizontal, 4)
 
             if let node = node {
-                sectorBadgeCard(node)
-                if !upstreamNodes.isEmpty {
-                    dependencyCard(title: "UPSTREAM SUPPLIERS",
-                                   subtitle: "Companies this stock depends on",
-                                   nodes: upstreamNodes,
-                                   arrowName: "arrow.up.circle.fill",
-                                   arrowColor: .appBlue)
-                }
-                if !downstreamNodes.isEmpty {
-                    dependencyCard(title: "DOWNSTREAM CUSTOMERS",
-                                   subtitle: "Companies that depend on this stock",
-                                   nodes: downstreamNodes,
-                                   arrowName: "arrow.down.circle.fill",
-                                   arrowColor: .appGreen)
-                    if downstreamSectorCounts.count > 1 {
-                        sectorExposureCard
-                    }
-                }
-                if upstreamNodes.isEmpty && downstreamNodes.isEmpty {
-                    FormCard(title: "SUPPLY CHAIN") {
-                        Text("No dependency data available for \(symbol).")
-                            .font(AppFont.body(13))
-                            .foregroundColor(.textMuted)
-                            .padding(16)
-                    }
-                }
+                nodeContent(node)
+            } else if isLoadingJIT || dynamicGraph.isSyncing {
+                loadingCard
             } else {
-                notInGraphCard
+                noDataCard
             }
+        }
+        .task { await loadIfNeeded() }
+    }
+
+    // MARK: - Node Content (unified path)
+
+    @ViewBuilder
+    private func nodeContent(_ node: CompanyNode) -> some View {
+        // Header card
+        if node.isDynamic {
+            dynamicHeaderCard(node)
+        } else {
+            staticSectorCard(node)
+        }
+
+        // Supply chain (static entries)
+        if !upstreamNodes.isEmpty {
+            dependencyCard(title: "UPSTREAM SUPPLIERS",
+                           subtitle: "Companies this stock depends on",
+                           nodes: upstreamNodes,
+                           arrowName: "arrow.up.circle.fill",
+                           arrowColor: .appBlue)
+        }
+        if !downstreamNodes.isEmpty {
+            dependencyCard(title: "DOWNSTREAM CUSTOMERS",
+                           subtitle: "Companies that depend on this stock",
+                           nodes: downstreamNodes,
+                           arrowName: "arrow.down.circle.fill",
+                           arrowColor: .appGreen)
+            if downstreamSectorCounts.count > 1 {
+                sectorExposureCard
+            }
+        }
+        if !node.isDynamic && upstreamNodes.isEmpty && downstreamNodes.isEmpty {
+            FormCard(title: "SUPPLY CHAIN") {
+                Text("No dependency data available for \(symbol).")
+                    .font(AppFont.body(13))
+                    .foregroundColor(.textMuted)
+                    .padding(16)
+            }
+        }
+
+        // Peer group (dynamic/Finnhub entries)
+        if node.isDynamic && !node.peers.isEmpty {
+            peersCard(peers: node.peers)
         }
     }
 
-    // MARK: - Sector Badge Card
+    // MARK: - JIT Load
 
-    private func sectorBadgeCard(_ node: CompanyNode) -> some View {
+    private func loadIfNeeded() async {
+        guard node == nil else { return }
+        isLoadingJIT = true
+        await DynamicGraphService.shared.fetchAndStore(symbol: symbol)
+        isLoadingJIT = false
+    }
+
+    // MARK: - Header Cards
+
+    private func staticSectorCard(_ node: CompanyNode) -> some View {
         let graph = IndustryGraphLoader.load()
-        let hex = graph.sectors.first { $0.key == node.sector }?.color ?? "#888888"
+        let hex        = graph.sectors.first { $0.key == node.sector }?.color ?? "#888888"
         let sectorName = graph.sectors.first { $0.key == node.sector }?.name ?? node.sector.capitalized
         return HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
@@ -116,6 +148,35 @@ struct IndustryDetailCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.appBorder, lineWidth: 1))
     }
+
+    private func dynamicHeaderCard(_ node: CompanyNode) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(node.name)
+                    .font(AppFont.body(14, weight: .semibold))
+                    .foregroundColor(.textPrimary)
+                HStack(spacing: 8) {
+                    if !node.industry.isEmpty { industryPill(node.industry) }
+                }
+            }
+            Spacer()
+            Text("FINNHUB")
+                .font(AppFont.mono(8, weight: .bold))
+                .foregroundColor(.textMuted)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(Color.surfaceAlt)
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(Color.appBorder, lineWidth: 1))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.appBorder, lineWidth: 1))
+    }
+
+    // MARK: - Pills
 
     private func sectorPill(_ name: String, hex: String) -> some View {
         Text(name)
@@ -138,7 +199,7 @@ struct IndustryDetailCard: View {
             .overlay(Capsule().stroke(Color.appBorder, lineWidth: 1))
     }
 
-    // MARK: - Dependency Card
+    // MARK: - Dependency Card (static)
 
     private func dependencyCard(
         title: String,
@@ -162,9 +223,9 @@ struct IndustryDetailCard: View {
                 .padding(.top, 10)
                 .padding(.bottom, 6)
 
-                ForEach(Array(nodes.enumerated()), id: \.element.id) { index, node in
+                ForEach(Array(nodes.enumerated()), id: \.element.id) { index, n in
                     if index > 0 { Divider().background(Color.appBorder) }
-                    companyRow(node)
+                    companyRow(n)
                 }
             }
         }
@@ -202,7 +263,75 @@ struct IndustryDetailCard: View {
         .padding(.vertical, 11)
     }
 
-    // MARK: - Sector Exposure Chart
+    // MARK: - Peers Card (dynamic)
+
+    private func peersCard(peers: [String]) -> some View {
+        FormCard(title: "RELATED COMPANIES") {
+            VStack(spacing: 0) {
+                HStack(spacing: 6) {
+                    Image(systemName: "person.3.fill")
+                        .font(.system(size: 11))
+                        .foregroundColor(.appBlue)
+                    Text("Companies in the same industry peer group")
+                        .font(AppFont.body(11))
+                        .foregroundColor(.textMuted)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.top, 10)
+                .padding(.bottom, 6)
+
+                ForEach(Array(peers.prefix(10).enumerated()), id: \.element) { index, peer in
+                    if index > 0 { Divider().background(Color.appBorder) }
+                    peerRow(peer)
+                }
+                if peers.count > 10 {
+                    Divider().background(Color.appBorder)
+                    Text("+\(peers.count - 10) more")
+                        .font(AppFont.body(11))
+                        .foregroundColor(.textMuted)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 10)
+                }
+            }
+        }
+    }
+
+    private func peerRow(_ peerSymbol: String) -> some View {
+        let isHeld = heldSymbols.contains(peerSymbol)
+        // Check if peer also has a node so we can show its name
+        let peerNode = IndustryGraphLoader.company(for: peerSymbol)
+        return HStack(spacing: 10) {
+            Circle()
+                .fill(Color.appBlue.opacity(0.6))
+                .frame(width: 8, height: 8)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(peerSymbol)
+                    .font(AppFont.mono(13, weight: .bold))
+                    .foregroundColor(.textPrimary)
+                if let name = peerNode?.name {
+                    Text(name)
+                        .font(AppFont.body(11))
+                        .foregroundColor(.textMuted)
+                        .lineLimit(1)
+                }
+            }
+            Spacer()
+            if isHeld {
+                Text("IN PORTFOLIO")
+                    .font(AppFont.mono(9, weight: .bold))
+                    .foregroundColor(.appGreen)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Color.appGreenDim)
+                    .clipShape(Capsule())
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 11)
+    }
+
+    // MARK: - Sector Exposure Chart (static)
 
     private var sectorExposureCard: some View {
         FormCard(title: "DOWNSTREAM SECTOR EXPOSURE") {
@@ -245,9 +374,7 @@ struct IndustryDetailCard: View {
             }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Color.surfaceAlt)
-                        .frame(height: 6)
+                    RoundedRectangle(cornerRadius: 3).fill(Color.surfaceAlt).frame(height: 6)
                     RoundedRectangle(cornerRadius: 3)
                         .fill(Color(hex: entry.hex))
                         .frame(width: geo.size.width * pct, height: 6)
@@ -259,15 +386,27 @@ struct IndustryDetailCard: View {
         .padding(.vertical, 10)
     }
 
-    // MARK: - Not In Graph
+    // MARK: - States
 
-    private var notInGraphCard: some View {
+    private var loadingCard: some View {
+        FormCard(title: "INDUSTRY") {
+            HStack(spacing: 10) {
+                ProgressView().scaleEffect(0.8)
+                Text("Loading industry data…")
+                    .font(AppFont.body(13))
+                    .foregroundColor(.textMuted)
+            }
+            .padding(16)
+        }
+    }
+
+    private var noDataCard: some View {
         FormCard(title: "INDUSTRY") {
             HStack(spacing: 10) {
                 Image(systemName: "info.circle")
                     .font(.system(size: 14))
                     .foregroundColor(.textMuted)
-                Text("\(symbol) is not in the industry dependency map. Map covers S&P 500 majors and is updated quarterly.")
+                Text("No industry data available for \(symbol). Check your Finnhub API key in Settings.")
                     .font(AppFont.body(12))
                     .foregroundColor(.textMuted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -276,4 +415,3 @@ struct IndustryDetailCard: View {
         }
     }
 }
-

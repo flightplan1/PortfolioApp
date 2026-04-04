@@ -12,25 +12,27 @@ struct ContentView: View {
     @State private var showTaxOnboarding: Bool = false
 
     enum Tab: Int, CaseIterable {
-        case dashboard, holdings, pnl, news, settings
+        case dashboard, holdings, pnl, news, watchlist, settings
 
         var title: String {
             switch self {
-            case .dashboard: return "Dashboard"
-            case .holdings:  return "Holdings"
-            case .pnl:       return "P&L"
-            case .news:      return "News"
-            case .settings:  return "Settings"
+            case .dashboard:  return "Dashboard"
+            case .holdings:   return "Holdings"
+            case .pnl:        return "P&L"
+            case .news:       return "News"
+            case .watchlist:  return "Watchlist"
+            case .settings:   return "Settings"
             }
         }
 
         var systemImage: String {
             switch self {
-            case .dashboard: return "square.grid.2x2"
-            case .holdings:  return "briefcase"
-            case .pnl:       return "chart.bar"
-            case .news:      return "newspaper"
-            case .settings:  return "gearshape"
+            case .dashboard:  return "square.grid.2x2"
+            case .holdings:   return "briefcase"
+            case .pnl:        return "chart.bar"
+            case .news:       return "newspaper"
+            case .watchlist:  return "eye"
+            case .settings:   return "gearshape"
             }
         }
     }
@@ -53,6 +55,13 @@ struct ContentView: View {
                 NewsView()
                     .tabItem { Label(Tab.news.title, systemImage: Tab.news.systemImage) }
                     .tag(Tab.news)
+
+                NavigationView {
+                    WatchlistView()
+                }
+                .navigationViewStyle(.stack)
+                .tabItem { Label(Tab.watchlist.title, systemImage: Tab.watchlist.systemImage) }
+                .tag(Tab.watchlist)
 
                 NavigationView {
                     SettingsView()

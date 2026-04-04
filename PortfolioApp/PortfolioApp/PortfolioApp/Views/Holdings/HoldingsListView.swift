@@ -269,9 +269,11 @@ struct HoldingsListView: View {
     }
 
     private func deleteHolding(_ holding: Holding) {
+        let symbol = holding.symbol
         context.delete(holding)
         try? context.save()
         holdingToDelete = nil
+        DynamicGraphService.shared.remove(symbol: symbol)
     }
 }
 

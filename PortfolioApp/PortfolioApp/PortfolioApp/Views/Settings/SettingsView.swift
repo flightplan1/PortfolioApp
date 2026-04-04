@@ -28,6 +28,9 @@ struct SettingsView: View {
     @State private var isTesting: Bool = false
     @State private var showDeleteConfirm: Bool = false
     @State private var showImport = false
+    @State private var exportURL: URL?
+    @State private var showExportShare = false
+    @State private var exportError: String?
 
     // MARK: - Body
 
@@ -61,6 +64,19 @@ struct SettingsView: View {
         .sheet(isPresented: $showImport) {
             ImportFlowView()
                 .environment(\.managedObjectContext, PersistenceController.shared.container.viewContext)
+        }
+        .sheet(isPresented: $showExportShare) {
+            if let url = exportURL {
+                ShareSheet(items: [url])
+            }
+        }
+        .alert("Export Failed", isPresented: Binding(
+            get: { exportError != nil },
+            set: { if !$0 { exportError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(exportError ?? "")
         }
     }
 
@@ -715,43 +731,73 @@ struct SettingsView: View {
             VStack(spacing: 0) {
                 iCloudRow
                 Divider().background(Color.appBorder).padding(.horizontal, 16)
-                importExportRow
+                importRow
+                Divider().background(Color.appBorder).padding(.horizontal, 16)
+                exportRow
             }
             .cardStyle()
         }
     }
 
-    private var importExportRow: some View {
-        Button {
-            showImport = true
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: "arrow.down.doc.fill")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.appBlue)
-                    .frame(width: 28, height: 28)
-                    .background(Color.appBlueDim)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Import / Export")
-                        .font(AppFont.body(14, weight: .semibold))
-                        .foregroundColor(.textPrimary)
-                    Text("Import CSV or JSON holdings, or export your data")
-                        .font(AppFont.body(11))
-                        .foregroundColor(.textSub)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.textMuted)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+    private var importRow: some View {
+        Button { showImport = true } label: {
+            settingsRowLabel(
+                icon: "arrow.down.doc.fill", iconColor: .appBlue, iconBg: Color.appBlueDim,
+                title: "Import",
+                subtitle: "Import CSV or JSON transaction history"
+            )
         }
         .buttonStyle(.plain)
+    }
+
+    private var exportRow: some View {
+        Button { performExport() } label: {
+            settingsRowLabel(
+                icon: "arrow.up.doc.fill", iconColor: .appGreen, iconBg: Color.appGreenDim,
+                title: "Export CSV",
+                subtitle: "Export all transactions in import-compatible format"
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func performExport() {
+        do {
+            let url = try ExportService.exportCSV(
+                context: context,
+                taxProfile: taxProfileManager.isComplete ? taxProfileManager.profile : nil
+            )
+            exportURL = url
+            showExportShare = true
+        } catch {
+            exportError = error.localizedDescription
+        }
+    }
+
+    private func settingsRowLabel(icon: String, iconColor: Color, iconBg: Color,
+                                   title: String, subtitle: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(iconColor)
+                .frame(width: 28, height: 28)
+                .background(iconBg)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(AppFont.body(14, weight: .semibold))
+                    .foregroundColor(.textPrimary)
+                Text(subtitle)
+                    .font(AppFont.body(11))
+                    .foregroundColor(.textSub)
+            }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(.textMuted)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
     }
 
     private var iCloudRow: some View {

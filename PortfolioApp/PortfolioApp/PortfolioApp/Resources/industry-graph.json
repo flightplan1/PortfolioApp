@@ -166,6 +166,41 @@
     }
   ],
   "companies": {
+    "ANET": {
+      "name": "Arista Networks",
+      "sector": "technology",
+      "industry": "Networking",
+      "upstream": ["NVDA", "AVGO", "MRVL", "QCOM", "TSM"],
+      "downstream": ["MSFT", "GOOGL", "AMZN", "META", "ORCL"]
+    },
+    "CRWD": {
+      "name": "CrowdStrike Holdings",
+      "sector": "technology",
+      "industry": "Cybersecurity",
+      "upstream": ["AMZN", "MSFT", "GOOGL"],
+      "downstream": ["JPM", "BAC", "GS", "BA", "LMT"]
+    },
+    "PANW": {
+      "name": "Palo Alto Networks",
+      "sector": "technology",
+      "industry": "Cybersecurity",
+      "upstream": ["AMZN", "MSFT", "GOOGL"],
+      "downstream": ["JPM", "BAC", "GS", "BA", "LMT"]
+    },
+    "SHOP": {
+      "name": "Shopify Inc.",
+      "sector": "technology",
+      "industry": "Software",
+      "upstream": ["AMZN", "GOOGL", "MSFT", "STRIPE"],
+      "downstream": ["UPS", "FEDX", "META", "GOOGL"]
+    },
+    "GLW": {
+      "name": "Corning Inc.",
+      "sector": "technology",
+      "industry": "Hardware",
+      "upstream": ["ALB", "SHW", "PPG"],
+      "downstream": ["AAPL", "MSFT", "GOOGL", "ANET", "CSCO"]
+    },
     "AAPL": {
       "name": "Apple Inc.",
       "sector": "technology",

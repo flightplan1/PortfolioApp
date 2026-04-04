@@ -57,6 +57,9 @@ struct PortfolioAppApp: App {
                     let stockSymbols = holdings
                         .filter { $0.assetType == .stock || $0.assetType == .etf }
                         .map { $0.symbol }
+
+                    // Sync dynamic industry graph for any new/removed stock holdings
+                    await DynamicGraphService.shared.syncWithHoldings(symbols: stockSymbols)
                     await EarningsService.shared.fetchIfNeeded(symbols: stockSymbols)
                     await EarningsNotificationManager.shared.scheduleIfNeeded(
                         events: EarningsService.shared.events, prefs: prefs

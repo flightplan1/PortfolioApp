@@ -353,11 +353,27 @@ struct AddHoldingView: View {
                         }
                     }
 
-                    // Sector — stocks only
-                    if assetType == .stock {
+                    // Sector — stocks and ETFs
+                    if assetType == .stock || assetType == .etf {
                         Divider().background(Color.appBorder)
-                        FormField(label: "Sector (optional)", placeholder: "Semiconductors") {
-                            TextField("Semiconductors", text: $sector)
+                        let graphIndustry = IndustryGraphLoader.company(for: symbol.uppercased())?.industry
+                        FormField(
+                            label: "Sector (optional)",
+                            placeholder: graphIndustry ?? "Semiconductors"
+                        ) {
+                            TextField(graphIndustry ?? "Semiconductors", text: $sector)
+                                .onAppear {
+                                    if sector.isEmpty, let detected = graphIndustry {
+                                        sector = detected
+                                    }
+                                }
+                        }
+                        if let detected = graphIndustry, sector == detected {
+                            Text("Auto-detected from industry map")
+                                .font(AppFont.body(11))
+                                .foregroundColor(.appBlue)
+                                .padding(.horizontal, 16)
+                                .padding(.bottom, 4)
                         }
                     }
 
@@ -717,18 +733,28 @@ struct AddHoldingView: View {
         existingRequest.fetchLimit = 1
         let existingHolding = (try? context.fetch(existingRequest))?.first
 
+        // Auto-fill sector/industry from graph if user left it blank
+        let graphNode = (assetType == .stock || assetType == .etf)
+            ? IndustryGraphLoader.company(for: symbol.uppercased())
+            : nil
+        let resolvedSector: String? = {
+            if !sector.isEmpty { return sector }
+            if let node = graphNode { return node.industry }
+            return nil
+        }()
+
         let holding: Holding
         if let existing = existingHolding {
             holding = existing
             // Update mutable fields if provided
             if !name.isEmpty { holding.name = name }
-            if !sector.isEmpty { holding.sector = sector }
+            if let s = resolvedSector { holding.sector = s }
         } else {
             holding = Holding(context: context)
             holding.symbol = symbol.uppercased()
             holding.name = name
             holding.assetType = assetType
-            holding.sector = sector.isEmpty ? nil : sector
+            holding.sector = resolvedSector
             holding.isDRIPEnabled = isDRIPEnabled
             holding.currency = "USD"
         }
