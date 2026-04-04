@@ -234,6 +234,13 @@ struct DashboardView: View {
         .task {
             await priceService.refreshAllPrices(holdings: Array(holdings))
         }
+        .onChange(of: priceService.lastFetchedAt) { _ in
+            WidgetDataWriter.write(
+                totalValue: totalPortfolioValue,
+                todayChange: todayChange,
+                todayChangePct: todayChangePct
+            )
+        }
     }
 
     // MARK: - Scroll Content
@@ -279,6 +286,7 @@ struct DashboardView: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.textSub)
                 }
+                .accessibilityLabel("Refresh prices")
             }
         }
     }
@@ -328,6 +336,7 @@ struct DashboardView: View {
                         .foregroundColor(.textMuted)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(isValueBlurred ? "Show portfolio values" : "Hide portfolio values")
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 6)
@@ -336,6 +345,7 @@ struct DashboardView: View {
             HStack(spacing: 6) {
                 Image(systemName: todayChange >= 0 ? "arrow.up.right" : "arrow.down.right")
                     .font(.system(size: 12, weight: .semibold))
+                    .accessibilityHidden(true)
                 Text(isValueBlurred ? "•••• (••%)" : "\(todayChange.asCurrencySigned) (\(todayChangePct.asPercentSigned()))")
                     .font(AppFont.mono(13, weight: .semibold))
                 Text("today")
@@ -388,6 +398,7 @@ struct DashboardView: View {
         let valueColor: Color = isSignedColor
             ? Color.pnlColor(isPositive ? Decimal(1) : Decimal(-1))
             : Color.textPrimary
+        let pctStr = pct.map { ", \($0.asPercentSigned())" } ?? ""
         return VStack(alignment: .leading, spacing: 3) {
             Text(label)
                 .font(AppFont.statLabel)
@@ -408,6 +419,8 @@ struct DashboardView: View {
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .statTileStyle()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(isValueBlurred ? "\(label): hidden" : "\(label): \(value)\(pctStr)")
     }
 
     // MARK: - Allocation Card

@@ -92,6 +92,7 @@ struct HoldingsListView: View {
                                 .font(.system(size: 17, weight: .semibold))
                                 .foregroundColor(.appBlue)
                         }
+                        .accessibilityLabel("Cash actions")
                         Button {
                             showAddHolding = true
                         } label: {
@@ -99,6 +100,7 @@ struct HoldingsListView: View {
                                 .font(.system(size: 17, weight: .semibold))
                                 .foregroundColor(.appBlue)
                         }
+                        .accessibilityLabel("Add holding")
                     }
                 }
             }
@@ -325,6 +327,21 @@ struct HoldingRowView: View {
         return ((pnl / totalCostBasis) * 100).rounded(to: 2)
     }
 
+    private var accessibilityDescription: String {
+        var parts = ["\(holding.name), \(holding.assetType.displayName)"]
+        if holding.isOption {
+            let dir = holding.isShortPosition ? "short" : "long"
+            parts.append("\(dir), \(totalQty.asQuantity(maxDecimalPlaces: 0)) contracts at \(avgCostPerShare.asCurrency)")
+        } else if let mv = marketValue, let pnl = unrealizedPnL {
+            let direction = pnl >= 0 ? "up" : "down"
+            parts.append("value \(mv.asCurrency), \(direction) \(pnl.asCurrencySigned)")
+        } else {
+            parts.append("cost basis \(totalCostBasis.asCurrency)")
+        }
+        if holding.isOptionExpired { parts.append("expired") }
+        return parts.joined(separator: ". ")
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             symbolColumn
@@ -333,6 +350,8 @@ struct HoldingRowView: View {
         }
         .padding(.vertical, 4)
         .opacity(holding.isOptionExpired ? 0.45 : 1)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityDescription)
     }
 
     private var symbolColumn: some View {
@@ -506,6 +525,8 @@ struct FilterChip: View {
                 )
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+        .accessibilityHint(isSelected ? "Tap to show all" : "Filter by \(label)")
     }
 }
 

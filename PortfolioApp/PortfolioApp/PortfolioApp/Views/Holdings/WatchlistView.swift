@@ -123,6 +123,7 @@ struct WatchlistView: View {
     private func watchlistRow(symbol: String) -> some View {
         let priceData = priceService.price(for: symbol)
         let isHeld = heldSymbols.contains(symbol)
+        let industry = IndustryGraphLoader.company(for: symbol).flatMap { $0.industry.isEmpty ? nil : $0.industry }
         return HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
@@ -137,10 +138,11 @@ struct WatchlistView: View {
                             .padding(.vertical, 2)
                             .background(Color.appGreenDim)
                             .clipShape(Capsule())
+                            .accessibilityHidden(true)
                     }
                 }
-                if let node = IndustryGraphLoader.company(for: symbol), !node.industry.isEmpty {
-                    Text(node.industry)
+                if let ind = industry {
+                    Text(ind)
                         .font(AppFont.body(11))
                         .foregroundColor(.textMuted)
                 }
@@ -156,6 +158,7 @@ struct WatchlistView: View {
                     HStack(spacing: 4) {
                         Image(systemName: price.dailyChange >= 0 ? "arrow.up" : "arrow.down")
                             .font(.system(size: 9, weight: .bold))
+                            .accessibilityHidden(true)
                         Text(String(format: "%.2f%%", abs((price.dailyChangePercent as NSDecimalNumber).doubleValue)))
                             .font(AppFont.mono(11))
                     }
@@ -176,6 +179,7 @@ struct WatchlistView: View {
                         .font(.system(size: 20))
                 }
                 .padding(.leading, 4)
+                .accessibilityLabel("Remove \(symbol) from watchlist")
             }
         }
         .padding(.horizontal, 16)

@@ -92,17 +92,17 @@ extension Color {
 struct AppFont {
     // Syne — Display / Headers
     static func display(_ size: CGFloat, weight: Font.Weight = .bold) -> Font {
-        .custom("Syne-Bold", size: size).weight(weight)
+        .custom("Syne-Bold", size: size, relativeTo: .title).weight(weight)
     }
 
     // JetBrains Mono — Numbers / Monospace
     static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .custom("JetBrainsMono-Regular", size: size).weight(weight)
+        .custom("JetBrainsMono-Regular", size: size, relativeTo: .body).weight(weight)
     }
 
     // Mulish — Body / Labels
     static func body(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .custom("Mulish-Regular", size: size).weight(weight)
+        .custom("Mulish-Regular", size: size, relativeTo: .body).weight(weight)
     }
 
     // Stat tile label: 9pt mono uppercase
