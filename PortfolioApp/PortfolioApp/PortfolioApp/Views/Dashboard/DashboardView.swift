@@ -234,7 +234,7 @@ struct DashboardView: View {
         .task {
             await priceService.refreshAllPrices(holdings: Array(holdings))
         }
-        .onChange(of: priceService.lastFetchedAt) { _ in
+        .onChange(of: priceService.lastFetchedAt) {
             WidgetDataWriter.write(
                 totalValue: totalPortfolioValue,
                 todayChange: todayChange,

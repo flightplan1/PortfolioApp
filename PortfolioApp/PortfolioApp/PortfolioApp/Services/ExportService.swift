@@ -36,8 +36,10 @@ enum ExportService {
             "# Consult a tax professional before filing. Not tax advice.",
         ]
         if let profile = taxProfile, profile.isComplete {
-            let income = profile.annualIncome.asCurrencyCompact
-            lines.append("# Tax profile: \(profile.filingStatus.displayName) | \(income) income | \(profile.state)\(profile.city.isEmpty ? "" : " / \(profile.city)")")
+            let income = profile.ordinaryIncome.asCurrencyCompact
+            let stateStr = profile.state ?? ""
+            let cityStr = profile.city.flatMap { $0.isEmpty ? nil : " / \($0)" } ?? ""
+            lines.append("# Tax profile: \(profile.filingStatus.displayName) | \(income) income | \(stateStr)\(cityStr)")
         }
         lines.append("#")
         return lines
@@ -68,7 +70,7 @@ enum ExportService {
 
     private static func csvRow(tx: Transaction, holding: Holding) -> String {
         let symbol    = escape(holding.symbol)
-        let date      = DateFormatter.exportDate.string(from: tx.tradeDate ?? Date())
+        let date      = DateFormatter.exportDate.string(from: tx.tradeDate)
         let action    = tx.type.exportAction
         let qty       = tx.quantity > 0 ? formatDecimal(tx.quantity) : ""
         let price     = tx.pricePerShare > 0 ? formatDecimal(tx.pricePerShare) : ""
@@ -124,8 +126,6 @@ private extension TransactionType {
         case .split:        return "SPLIT"
         case .transferIn:   return "TRANSFER_IN"
         case .transferOut:  return "TRANSFER_OUT"
-        case .btc:          return "BUY"   // Buy-to-Close maps to BUY on re-import
-        case .stc:          return "SELL"  // Sell-to-Close maps to SELL on re-import
         }
     }
 }
@@ -138,12 +138,7 @@ private extension AssetType {
         case .crypto:   return "Crypto"
         case .options:  return "Option"
         case .cash:     return "Cash"
-        case .mmf:      return "MMF"
-        case .tbill:    return "T-Bill"
-        case .tnote:    return "T-Note"
-        case .tbond:    return "T-Bond"
-        case .tips:     return "TIPS"
-        case .ibond:    return "I-Bond"
+        case .treasury: return "Treasury"
         }
     }
 }

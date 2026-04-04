@@ -31,6 +31,7 @@ struct SettingsView: View {
     @State private var exportURL: URL?
     @State private var showExportShare = false
     @State private var exportError: String?
+    @State private var showExportError = false
 
     // MARK: - Body
 
@@ -70,10 +71,7 @@ struct SettingsView: View {
                 ShareSheet(items: [url])
             }
         }
-        .alert("Export Failed", isPresented: Binding(
-            get: { exportError != nil },
-            set: { if !$0 { exportError = nil } }
-        )) {
+        .alert("Export Failed", isPresented: $showExportError) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(exportError ?? "")
@@ -765,12 +763,13 @@ struct SettingsView: View {
         do {
             let url = try ExportService.exportCSV(
                 context: context,
-                taxProfile: taxProfileManager.isComplete ? taxProfileManager.profile : nil
+                taxProfile: taxProfileManager.isProfileComplete ? taxProfileManager.profile : nil
             )
             exportURL = url
             showExportShare = true
         } catch {
             exportError = error.localizedDescription
+            showExportError = true
         }
     }
 
