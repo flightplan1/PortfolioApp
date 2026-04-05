@@ -1,13 +1,16 @@
 import Foundation
 import LocalAuthentication
+import Security
 import Combine
 
 final class AppLockManager: ObservableObject {
 
     @Published private(set) var isUnlocked: Bool = false
     @Published private(set) var isAuthenticating: Bool = false
+    @Published private(set) var showPINEntry: Bool = false
+    @Published private(set) var showPINSetup: Bool = false
+    @Published private(set) var pinError: String? = nil
 
-    // Stored in UserDefaults. Will migrate to NSUbiquitousKeyValueStore in Phase 7.
     @Published var lockEnabled: Bool {
         didSet { UserDefaults.standard.set(lockEnabled, forKey: "biometricLockEnabled") }
     }
@@ -16,6 +19,16 @@ final class AppLockManager: ObservableObject {
     }
 
     private var backgroundedAt: Date?
+    private let pinKeychainService = "com.portfolioapp.apppin"
+
+    var hasPIN: Bool {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: pinKeychainService,
+            kSecReturnData as String: false
+        ]
+        return SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess
+    }
 
     init() {
         let storedEnabled = UserDefaults.standard.object(forKey: "biometricLockEnabled")
@@ -31,22 +44,77 @@ final class AppLockManager: ObservableObject {
         let context = LAContext()
         var error: NSError?
 
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            isUnlocked = true
+        // If biometrics aren't available, go straight to PIN
+        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
+            showPINFallback()
             return
         }
 
         isAuthenticating = true
 
         context.evaluatePolicy(
-            .deviceOwnerAuthentication,
+            .deviceOwnerAuthenticationWithBiometrics,
             localizedReason: "Unlock your portfolio"
         ) { [weak self] success, _ in
             DispatchQueue.main.async {
                 self?.isAuthenticating = false
-                self?.isUnlocked = success
+                if success {
+                    self?.isUnlocked = true
+                } else {
+                    self?.showPINFallback()
+                }
             }
         }
+    }
+
+    func showPINFallback() {
+        pinError = nil
+        if hasPIN {
+            showPINEntry = true
+        } else {
+            showPINSetup = true
+        }
+    }
+
+    func verifyPIN(_ pin: String) {
+        guard let stored = loadPIN() else {
+            pinError = "No PIN found. Please set up a new PIN."
+            showPINEntry = false
+            showPINSetup = true
+            return
+        }
+        if pin == stored {
+            pinError = nil
+            showPINEntry = false
+            isUnlocked = true
+        } else {
+            pinError = "Incorrect PIN. Try again."
+        }
+    }
+
+    func savePIN(_ pin: String) {
+        let data = Data(pin.utf8)
+        let deleteQuery: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
+                                           kSecAttrService as String: pinKeychainService]
+        SecItemDelete(deleteQuery as CFDictionary)
+        let addQuery: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
+                                        kSecAttrService as String: pinKeychainService,
+                                        kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked,
+                                        kSecValueData as String: data]
+        SecItemAdd(addQuery as CFDictionary, nil)
+        showPINSetup = false
+        isUnlocked = true
+    }
+
+    private func loadPIN() -> String? {
+        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
+                                     kSecAttrService as String: pinKeychainService,
+                                     kSecReturnData as String: true,
+                                     kSecMatchLimit as String: kSecMatchLimitOne]
+        var result: AnyObject?
+        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+              let data = result as? Data else { return nil }
+        return String(data: data, encoding: .utf8)
     }
 
     // MARK: - Scene Lifecycle

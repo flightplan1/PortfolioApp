@@ -15,6 +15,12 @@ struct SettingsView: View {
         animation: .none
     ) private var holdings: FetchedResults<Holding>
 
+    @FetchRequest(
+        sortDescriptors: [],
+        predicate: NSPredicate(format: "isClosed == NO AND isSoftDeleted == NO"),
+        animation: .none
+    ) private var openLots: FetchedResults<Lot>
+
     @State private var showTaxOnboarding  = false
     @State private var remoteURLDraft     = ""
     @State private var showURLSaveConfirm = false
@@ -556,11 +562,13 @@ struct SettingsView: View {
             }
             .cardStyle()
 
-            // Per-symbol mutes
-            let stockSymbols = holdings
-                .filter { $0.assetType == .stock || $0.assetType == .etf || $0.assetType == .crypto }
+            // Per-symbol mutes — only holdings with open lots, deduped
+            let openHoldingIds = Set(openLots.map { $0.holdingId })
+            let stockSymbols = Array(Set(holdings
+                .filter { ($0.assetType == .stock || $0.assetType == .etf || $0.assetType == .crypto)
+                           && openHoldingIds.contains($0.id) }
                 .map { $0.symbol }
-                .sorted()
+            )).sorted()
 
             if !stockSymbols.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {

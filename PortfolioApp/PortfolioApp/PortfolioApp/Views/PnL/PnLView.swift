@@ -206,6 +206,7 @@ struct PnLView: View {
         for tx in sellsThisYear {
             guard let lotId = tx.lotId, let lot = lotMap[lotId] else { continue }
             let h   = holdingMap[lot.holdingId]
+            guard h?.isRetirementAccount != true else { continue }
             let m   = h?.lotMultiplier ?? 1
             let dir = h?.pnlDirection  ?? 1
             let cost = (tx.quantity * lot.splitAdjustedCostBasisPerShare * m).rounded(to: 2)
@@ -221,6 +222,7 @@ struct PnLView: View {
         for tx in sellsThisYear {
             guard let lotId = tx.lotId, let lot = lotMap[lotId] else { continue }
             let h   = holdingMap[lot.holdingId]
+            guard h?.isRetirementAccount != true else { continue }
             let m   = h?.lotMultiplier ?? 1
             let dir = h?.pnlDirection  ?? 1
             let cost = (tx.quantity * lot.splitAdjustedCostBasisPerShare * m).rounded(to: 2)

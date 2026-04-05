@@ -7,7 +7,7 @@ import CoreData
 // Parent entity in CoreData: BaseFinancialRecord
 
 @objc(Transaction)
-public class Transaction: BaseFinancialRecord {
+public class Transaction: BaseFinancialRecord, Identifiable {
 
     // MARK: - Identity
 

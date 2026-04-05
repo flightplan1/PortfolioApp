@@ -375,7 +375,7 @@ struct SellPositionSheet: View {
                 ? ((takeQty * lot.splitAdjustedCostBasisPerShare * m) - txTotal).rounded(to: 2)
                 : (txTotal - (takeQty * lot.splitAdjustedCostBasisPerShare * m)).rounded(to: 2)
             var est: TaxEstimate? = nil
-            if pnl > 0 && taxProfileManager.isProfileComplete {
+            if pnl > 0 && !holding.isRetirementAccount && taxProfileManager.isProfileComplete {
                 let engine = TaxEngine(rates: TaxRatesLoader.load(), profile: taxProfileManager.profile)
                 est = engine.estimate(gain: pnl, purchaseDate: lot.purchaseDate, saleDate: closeDate, isSection1256: holding.isSection1256)
             }

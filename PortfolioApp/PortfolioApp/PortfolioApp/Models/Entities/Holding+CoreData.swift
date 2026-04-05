@@ -36,6 +36,12 @@ public class Holding: BaseFinancialRecord, Identifiable {
     /// True when the option position was opened short (sell-to-open / write).
     /// Flips the P&L sign: profit when option declines, loss when it rises.
     @NSManaged public var isShortPosition: Bool
+
+    // MARK: - Account Type
+
+    /// When true this position is held in a tax-advantaged account (IRA, Roth IRA, 401k, etc.).
+    /// All tax calculations and estimates are suppressed for retirement account positions.
+    @NSManaged public var isRetirementAccount: Bool
     @NSManaged public var bankFeeRaw: NSDecimalNumber?
     @NSManaged public var underlyingSymbol: String?
 
@@ -53,6 +59,7 @@ public class Holding: BaseFinancialRecord, Identifiable {
         isDRIPEnabled = false
         isSection1256 = false
         isShortPosition = false
+        isRetirementAccount = false
         assetTypeRaw = AssetType.stock.rawValue
         markModified()
     }

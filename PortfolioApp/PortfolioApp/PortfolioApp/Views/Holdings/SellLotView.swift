@@ -99,7 +99,8 @@ struct SellLotView: View {
     private var isFullClose: Bool { closeQty == maxQty }
 
     private var taxEstimate: TaxEstimate? {
-        guard let pnl = realizedPnL, pnl > 0 else { return nil }
+        guard !holding.isRetirementAccount,
+              let pnl = realizedPnL, pnl > 0 else { return nil }
         let engine = TaxEngine(rates: TaxRatesLoader.load(), profile: taxProfileManager.profile)
         return engine.estimate(
             gain: pnl,

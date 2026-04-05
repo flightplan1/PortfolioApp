@@ -14,6 +14,7 @@ struct AddHoldingView: View {
     @State private var assetType: AssetType = .stock
     @State private var sector: String = ""
     @State private var isDRIPEnabled: Bool = false
+    @State private var isRetirementAccount: Bool = false
 
     // Buy transaction
     @State private var quantity: String = ""
@@ -408,6 +409,19 @@ struct AddHoldingView: View {
                         }
                         .tint(.appGreen)
                     }
+
+                    Divider().background(Color.appBorder)
+                    Toggle(isOn: $isRetirementAccount) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Retirement Account")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.textPrimary)
+                            Text("IRA, Roth IRA, 401k — tax estimates suppressed")
+                                .font(.system(size: 11))
+                                .foregroundColor(.textSub)
+                        }
+                    }
+                    .tint(.appPurple)
                 }
             }
         }
@@ -609,6 +623,14 @@ struct AddHoldingView: View {
             if let industry = profile.finnhubIndustry, !industry.isEmpty {
                 sector = industry
             }
+            // Auto-detect ETF vs stock — only override if user hasn't manually picked a non-stock/etf type
+            if assetType == .stock || assetType == .etf {
+                switch profile.type {
+                case "ETP":           assetType = .etf
+                case "Common Stock":  assetType = .stock
+                default: break
+                }
+            }
         } catch { }
     }
 
@@ -756,6 +778,7 @@ struct AddHoldingView: View {
             holding.assetType = assetType
             holding.sector = resolvedSector
             holding.isDRIPEnabled = isDRIPEnabled
+            holding.isRetirementAccount = isRetirementAccount
             holding.currency = "USD"
         }
 
@@ -954,6 +977,7 @@ enum TreasuryInstrument: String, CaseIterable {
 private struct FinnhubProfile: Decodable {
     let name: String?
     let finnhubIndustry: String?
+    let type: String?   // "ETP" = ETF, "Common Stock" = stock
 }
 
 private struct FinnhubSearchResponse: Decodable {

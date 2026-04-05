@@ -15,6 +15,7 @@ struct HoldingsListView: View {
     @State private var showDepositCash = false
     @State private var showWithdrawCash = false
     @State private var holdingToDelete: Holding?
+    @State private var showClosedPositions = false
 
     // MARK: - Filtered Holdings
 
@@ -24,6 +25,15 @@ struct HoldingsListView: View {
         return base.filter { holding in
             let lots = (try? context.fetch(Lot.openLots(for: holding.id))) ?? []
             return lots.reduce(Decimal(0)) { $0 + $1.remainingQty } > 0
+        }
+    }
+
+    /// Holdings where all lots are sold/closed — not shown in main list but accessible via toggle.
+    private var closedHoldings: [Holding] {
+        holdings.filter { holding in
+            let lots = (try? context.fetch(Lot.openLots(for: holding.id))) ?? []
+            let openQty = lots.reduce(Decimal(0)) { $0 + $1.remainingQty }
+            return openQty <= 0
         }
     }
 
@@ -191,7 +201,65 @@ struct HoldingsListView: View {
                         .padding(.leading, -16)
                 }
             }
+
+            if !closedHoldings.isEmpty {
+                Section {
+                    if showClosedPositions {
+                        ForEach(closedHoldings) { holding in
+                            closedHoldingRow(holding)
+                        }
+                    }
+                } header: {
+                    Button {
+                        withAnimation { showClosedPositions.toggle() }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text("CLOSED POSITIONS (\(closedHoldings.count))")
+                                .sectionTitleStyle()
+                            Image(systemName: showClosedPositions ? "chevron.up" : "chevron.down")
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundColor(.textMuted)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.leading, -16)
+                }
+            }
         }
+    }
+
+    private func closedHoldingRow(_ holding: Holding) -> some View {
+        NavigationLink(destination: holding.isTreasury
+            ? AnyView(TreasuryDetailView(holding: holding))
+            : AnyView(PositionDetailView(holding: holding))
+        ) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Text(holding.symbol)
+                            .font(.system(size: 15, weight: .bold, design: .monospaced))
+                            .foregroundColor(.textSub)
+                        AssetTypeChip(type: holding.assetType)
+                    }
+                    Text(holding.name)
+                        .font(.system(size: 12))
+                        .foregroundColor(.textMuted)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Text("CLOSED")
+                    .font(AppFont.mono(9, weight: .bold))
+                    .foregroundColor(.textMuted)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Color.appBorder)
+                    .clipShape(Capsule())
+            }
+            .padding(.vertical, 4)
+            .opacity(0.6)
+        }
+        .listRowBackground(Color.surface)
+        .listRowSeparatorTint(Color.appBorder)
     }
 
     private func holdingRow(_ holding: Holding) -> some View {

@@ -35,6 +35,7 @@ struct PositionDetailView: View {
     @State private var revertAlertMessage = ""
     @State private var noteDraft: String = ""
     @State private var isEditingNote: Bool = false
+    @State private var transactionToEdit: Transaction?
 
     // MARK: - Undo Toast
     @State private var undoToastVisible  = false
@@ -55,6 +56,104 @@ struct PositionDetailView: View {
     // MARK: - Computed
 
     private var openLots: [Lot] { Array(lots) }
+
+    struct ClosedLotData {
+        let proceeds: Decimal
+        let gain: Decimal
+        let saleDate: Date        // latest sell date for this lot
+        let isLongTermAtSale: Bool
+    }
+
+    /// Realized data per closed lot, keyed by lot.id.
+    /// Proceeds = sum of sell tx.totalAmount for that lot.
+    /// Gain = (proceeds − lot.totalCostBasis) × pnlDirection.
+    /// isLongTermAtSale = whether the latest sell date was >366 days after purchase.
+    private var closedLotDataMap: [UUID: ClosedLotData] {
+        let dir = holding.pnlDirection
+        let sellTxs = transactions.filter { $0.type == .sell }
+
+        // Pass 1: match sells that have a lotId
+        var proceedsMap: [UUID: Decimal] = [:]
+        var saleDateMap: [UUID: Date]    = [:]
+        var unlinkedProceeds: Decimal    = 0
+        var unlinkedLatestDate: Date?    = nil
+
+        for tx in sellTxs {
+            if let lotId = tx.lotId {
+                proceedsMap[lotId, default: 0] += tx.totalAmount
+                if let prev = saleDateMap[lotId] {
+                    saleDateMap[lotId] = max(prev, tx.tradeDate)
+                } else {
+                    saleDateMap[lotId] = tx.tradeDate
+                }
+            } else {
+                // No lotId — pool for fallback distribution
+                unlinkedProceeds += tx.totalAmount
+                if let prev = unlinkedLatestDate {
+                    unlinkedLatestDate = max(prev, tx.tradeDate)
+                } else {
+                    unlinkedLatestDate = tx.tradeDate
+                }
+            }
+        }
+
+        // Pass 2: match unlinked sells to unmatched closed lots by quantity (FIFO by purchase date)
+        // This handles the common case where a sell covers exactly one lot's originalQty.
+        if unlinkedProceeds > 0 {
+            var unmatchedLots = closedLots
+                .filter { proceedsMap[$0.id] == nil }
+                .sorted { $0.purchaseDate < $1.purchaseDate }   // FIFO order
+
+            var remainingUnlinked = unlinkedProceeds
+            var remainingDate = unlinkedLatestDate
+
+            // Group unlinked sells by quantity for exact-match attempt
+            var unlinkedSells = sellTxs.filter { $0.lotId == nil }
+                .sorted { $0.tradeDate < $1.tradeDate }
+
+            for tx in unlinkedSells {
+                // Try to find an unmatched lot whose originalQty matches this sell's quantity
+                if let idx = unmatchedLots.firstIndex(where: {
+                    ($0.originalQty - tx.quantity).magnitude < Decimal(string: "0.0001")!
+                }) {
+                    let lot = unmatchedLots[idx]
+                    proceedsMap[lot.id, default: 0] += tx.totalAmount
+                    saleDateMap[lot.id] = saleDateMap[lot.id].map { max($0, tx.tradeDate) } ?? tx.tradeDate
+                    unmatchedLots.remove(at: idx)
+                    remainingUnlinked -= tx.totalAmount
+                }
+                // sells that don't qty-match any lot stay in remainingUnlinked
+            }
+
+            // Pass 3: for any still-unmatched lots, distribute remaining proceeds proportionally
+            if remainingUnlinked > 0 && !unmatchedLots.isEmpty {
+                let totalUnmatchedQty = unmatchedLots.reduce(Decimal(0)) { $0 + $1.originalQty }
+                if totalUnmatchedQty > 0 {
+                    for lot in unmatchedLots {
+                        let share = (lot.originalQty / totalUnmatchedQty * remainingUnlinked).rounded(to: 2)
+                        proceedsMap[lot.id, default: 0] += share
+                        saleDateMap[lot.id] = remainingDate ?? lot.purchaseDate
+                    }
+                }
+            }
+        }
+
+        var result: [UUID: ClosedLotData] = [:]
+        for lot in closedLots {
+            guard let proceeds = proceedsMap[lot.id],
+                  let saleDate = saleDateMap[lot.id] else { continue }
+            let ltThreshold = Calendar.current.date(byAdding: .day, value: 366, to: lot.purchaseDate)!
+            let isLT = saleDate > ltThreshold
+            let gain = (proceeds - lot.totalCostBasis) * dir
+            result[lot.id] = ClosedLotData(
+                proceeds: proceeds,
+                gain: gain,
+                saleDate: saleDate,
+                isLongTermAtSale: isLT
+            )
+        }
+        return result
+    }
 
     private var totalQty: Decimal {
         openLots.reduce(0) { $0 + $1.remainingQty }
@@ -117,7 +216,8 @@ struct PositionDetailView: View {
 
     /// Computes a tax estimate for selling a lot at the current price.
     private func lotTaxEstimate(for lot: Lot) -> TaxEstimate? {
-        guard taxProfileManager.isProfileComplete,
+        guard !holding.isRetirementAccount,
+              taxProfileManager.isProfileComplete,
               let price = currentPrice else { return nil }
         let m    = holding.lotMultiplier
         let dir  = holding.pnlDirection
@@ -135,7 +235,8 @@ struct PositionDetailView: View {
     /// Estimated tax saving if the lot is held to LT qualification (ST tax − LT tax).
     /// Returns nil when lot is already LT, has no unrealized gain, or profile is incomplete.
     private func lotLTSaving(for lot: Lot) -> Decimal? {
-        guard !lot.isLongTerm,
+        guard !holding.isRetirementAccount,
+              !lot.isLongTerm,
               let days = lot.daysToLongTerm,
               days <= 60,
               taxProfileManager.isProfileComplete,
@@ -213,8 +314,12 @@ struct PositionDetailView: View {
             Color.appBg.ignoresSafeArea()
             ScrollView {
                 VStack(spacing: 16) {
-                    TaxProfileBannerView()
-                        .environmentObject(taxProfileManager)
+                    if holding.isRetirementAccount {
+                        retirementAccountBanner
+                    } else {
+                        TaxProfileBannerView()
+                            .environmentObject(taxProfileManager)
+                    }
                     summaryCard
                     lotsCard
                     if !dividendEvents.isEmpty {
@@ -233,6 +338,7 @@ struct PositionDetailView: View {
                         IndustryDetailCard(symbol: holding.symbol)
                     }
                     notesCard
+                    accountTypeCard
                 }
                 .onAppear { noteDraft = holding.notes ?? "" }
                 .padding(16)
@@ -290,6 +396,11 @@ struct PositionDetailView: View {
         .sheet(item: $lotToEdit) { lot in
             AddLotView(holding: holding, lot: lot)
                 .environment(\.managedObjectContext, context)
+        }
+        .sheet(item: $transactionToEdit) { tx in
+            EditTransactionView(transaction: tx)
+                .environment(\.managedObjectContext, context)
+                .environmentObject(taxProfileManager)
         }
         .sheet(item: $lotToSell) { lot in
             SellLotView(holding: holding, lot: lot) { tx, snap in
@@ -697,7 +808,21 @@ struct PositionDetailView: View {
             if !closedLotsCollapsed {
                 VStack(spacing: 0) {
                     ForEach(Array(closedLots.enumerated()), id: \.element.id) { index, lot in
-                        ClosedLotRowView(lot: lot, isOption: holding.isOption)
+                        ClosedLotRowView(lot: lot,
+                                         isOption: holding.isOption,
+                                         data: closedLotDataMap[lot.id])
+                            .contextMenu {
+                                Button {
+                                    lotToEdit = lot
+                                } label: {
+                                    Label("Edit Lot", systemImage: "pencil")
+                                }
+                                Button(role: .destructive) {
+                                    lotToDelete = lot
+                                } label: {
+                                    Label("Delete Lot", systemImage: "trash")
+                                }
+                            }
                         if index < closedLots.count - 1 {
                             Divider().background(Color.appBorder)
                         }
@@ -734,14 +859,20 @@ struct PositionDetailView: View {
             if !transactionsCollapsed {
                 VStack(spacing: 0) {
                     ForEach(Array(transactions.enumerated()), id: \.element.id) { index, tx in
-                        TransactionRowView(transaction: tx, isOption: holding.isOption)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button(role: .destructive) {
-                                    deleteTransaction(tx)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
+                        Button {
+                            transactionToEdit = tx
+                        } label: {
+                            TransactionRowView(transaction: tx, isOption: holding.isOption)
+                        }
+                        .buttonStyle(.plain)
+                        .contentShape(Rectangle())
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                deleteTransaction(tx)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
                             }
+                        }
                         if index < transactions.count - 1 {
                             Divider().background(Color.appBorder)
                         }
@@ -769,6 +900,56 @@ struct PositionDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Retirement Account Banner
+
+    private var retirementAccountBanner: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "building.columns.fill")
+                .font(.system(size: 14))
+                .foregroundColor(.appPurple)
+            Text("Retirement Account — tax estimates suppressed")
+                .font(AppFont.body(13, weight: .medium))
+                .foregroundColor(.appPurple)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color.appPurple.opacity(0.10))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .stroke(Color.appPurple.opacity(0.25), lineWidth: 1))
+    }
+
+    // MARK: - Account Type Card
+
+    private var accountTypeCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("ACCOUNT")
+                .sectionTitleStyle()
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                .padding(.bottom, 14)
+
+            Toggle(isOn: Binding(
+                get: { holding.isRetirementAccount },
+                set: { holding.isRetirementAccount = $0; try? context.save() }
+            )) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Retirement Account")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.textPrimary)
+                    Text("IRA, Roth IRA, 401k — tax estimates suppressed")
+                        .font(.system(size: 11))
+                        .foregroundColor(.textSub)
+                }
+            }
+            .tint(.appPurple)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 20)
+        }
+        .cardStyle()
     }
 
     // MARK: - Notes Card
@@ -834,6 +1015,12 @@ struct PositionDetailView: View {
     // MARK: - Delete
 
     private func deleteLot(_ lot: Lot) {
+        // For closed lots, also soft-delete linked sell transactions
+        if lot.isClosed {
+            for tx in transactions where tx.lotId == lot.id {
+                tx.softDelete(reason: .userDeleted)
+            }
+        }
         lot.softDelete()
         try? context.save()
         lotToDelete = nil
@@ -1058,13 +1245,7 @@ struct LotRowView: View {
 struct ClosedLotRowView: View {
     let lot: Lot
     let isOption: Bool
-
-    private var realizedPnL: Decimal {
-        // Total cost basis is tracked on the lot; realized proceeds are in transactions
-        // Approximate: totalCostBasis is what was paid; remaining = 0 means fully sold
-        // We show cost basis since we don't store total proceeds on the lot directly
-        lot.totalCostBasis
-    }
+    let data: PositionDetailView.ClosedLotData?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -1075,25 +1256,58 @@ struct ClosedLotRowView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
-                    Text(lot.purchaseDate.formatted(.dateTime.month(.abbreviated).day().year()))
-                        .font(AppFont.mono(12, weight: .bold))
-                        .foregroundColor(.textSub)
+                    if let d = data {
+                        Text(d.saleDate.formatted(.dateTime.month(.abbreviated).day().year()))
+                            .font(AppFont.mono(12, weight: .bold))
+                            .foregroundColor(.textSub)
+                        SmallChip(label: d.isLongTermAtSale ? "LT" : "ST",
+                                   color: d.isLongTermAtSale ? .appGreen : .appGold)
+                    } else {
+                        Text(lot.purchaseDate.formatted(.dateTime.month(.abbreviated).day().year()))
+                            .font(AppFont.mono(12, weight: .bold))
+                            .foregroundColor(.textSub)
+                    }
                     SmallChip(label: "CLOSED", color: .textMuted)
                 }
-                Text("\(lot.originalQty.asQuantity(maxDecimalPlaces: 4)) \(isOption ? "contracts" : "shares") @ \(lot.splitAdjustedCostBasisPerShare.asCurrency)")
-                    .font(AppFont.mono(11))
-                    .foregroundColor(.textMuted)
+                if let d = data {
+                    let salePrice = lot.originalQty > 0
+                        ? (d.proceeds / lot.originalQty).rounded(to: 2)
+                        : Decimal(0)
+                    Text("\(lot.originalQty.asQuantity(maxDecimalPlaces: 4)) \(isOption ? "contracts" : "shares") · sold @ \(salePrice.asCurrency)  ·  bought \(lot.purchaseDate.formatted(.dateTime.month(.abbreviated).day().year())) @ \(lot.splitAdjustedCostBasisPerShare.asCurrency)")
+                        .font(AppFont.mono(11))
+                        .foregroundColor(.textMuted)
+                } else {
+                    Text("\(lot.originalQty.asQuantity(maxDecimalPlaces: 4)) \(isOption ? "contracts" : "shares") · bought \(lot.purchaseDate.formatted(.dateTime.month(.abbreviated).day().year())) @ \(lot.splitAdjustedCostBasisPerShare.asCurrency)")
+                        .font(AppFont.mono(11))
+                        .foregroundColor(.textMuted)
+                }
             }
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 4) {
-                Text(lot.totalCostBasis.asCurrency)
-                    .font(AppFont.mono(12, weight: .semibold))
-                    .foregroundColor(.textSub)
-                Text("cost basis")
-                    .font(AppFont.mono(10))
-                    .foregroundColor(.textMuted)
+            if let d = data {
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(d.proceeds.asCurrency)
+                        .font(AppFont.mono(12, weight: .semibold))
+                        .foregroundColor(.textSub)
+                    HStack(spacing: 2) {
+                        Text(d.gain >= 0 ? "+" : "")
+                            .font(AppFont.mono(10))
+                            .foregroundColor(d.gain >= 0 ? .appGreen : .appRed)
+                        Text(d.gain.asCurrency)
+                            .font(AppFont.mono(10, weight: .semibold))
+                            .foregroundColor(d.gain >= 0 ? .appGreen : .appRed)
+                    }
+                }
+            } else {
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(lot.totalCostBasis.asCurrency)
+                        .font(AppFont.mono(12, weight: .semibold))
+                        .foregroundColor(.textSub)
+                    Text("cost basis")
+                        .font(AppFont.mono(10))
+                        .foregroundColor(.textMuted)
+                }
             }
         }
         .padding(.horizontal, 16)
@@ -1104,7 +1318,7 @@ struct ClosedLotRowView: View {
 // MARK: - Transaction Row View
 
 struct TransactionRowView: View {
-    let transaction: Transaction
+    @ObservedObject var transaction: Transaction
     let isOption: Bool
 
     private var isBuy: Bool { transaction.type == .buy || transaction.type == .drip || transaction.type == .transferIn }

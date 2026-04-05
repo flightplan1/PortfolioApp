@@ -183,8 +183,10 @@ struct DashboardView: View {
     // MARK: - Computed: Top Movers
 
     private var topMovers: [MoverItem] {
-        holdings.compactMap { h -> MoverItem? in
+        var seen = Set<String>()
+        return holdings.compactMap { h -> MoverItem? in
             guard !h.isOption,   // options share symbol with underlying — would show stock movement
+                  seen.insert(h.symbol).inserted,
                   let pct = priceService.dailyChangePercent(for: h.symbol),
                   let amt = priceService.dailyChange(for: h.symbol) else { return nil }
             return MoverItem(id: h.id, symbol: h.symbol, name: h.name,
