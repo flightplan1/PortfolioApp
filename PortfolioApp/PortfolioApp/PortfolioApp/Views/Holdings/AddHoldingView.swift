@@ -650,8 +650,18 @@ struct AddHoldingView: View {
             // Find exact symbol match (case-insensitive)
             if let match = result.result?.first(where: {
                 $0.displaySymbol.uppercased() == symbol.uppercased()
-            }), !match.description.isEmpty {
-                name = match.description.capitalized
+            }) {
+                if !match.description.isEmpty {
+                    name = match.description.capitalized
+                }
+                // Auto-detect ETF vs stock from search result type
+                if assetType == .stock || assetType == .etf {
+                    switch match.type {
+                    case "ETP":           assetType = .etf
+                    case "Common Stock":  assetType = .stock
+                    default: break
+                    }
+                }
             }
         } catch { }
     }
@@ -987,6 +997,7 @@ private struct FinnhubSearchResponse: Decodable {
 private struct FinnhubSearchItem: Decodable {
     let description: String
     let displaySymbol: String
+    let type: String?   // "ETP" = ETF, "Common Stock" = stock
 }
 
 // MARK: - Preview

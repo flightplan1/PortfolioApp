@@ -183,9 +183,12 @@ struct DashboardView: View {
     // MARK: - Computed: Top Movers
 
     private var topMovers: [MoverItem] {
+        // Only include holdings that still have open lots
+        let holdingIdsWithOpenLots = Set(allOpenLots.map { $0.holdingId })
         var seen = Set<String>()
         return holdings.compactMap { h -> MoverItem? in
-            guard !h.isOption,   // options share symbol with underlying — would show stock movement
+            guard holdingIdsWithOpenLots.contains(h.id),
+                  !h.isOption,   // options share symbol with underlying — would show stock movement
                   seen.insert(h.symbol).inserted,
                   let pct = priceService.dailyChangePercent(for: h.symbol),
                   let amt = priceService.dailyChange(for: h.symbol) else { return nil }
