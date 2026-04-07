@@ -73,7 +73,7 @@ struct AddHoldingView: View {
                 Color.appBg.ignoresSafeArea()
 
                 ScrollView {
-                    LazyVStack(spacing: 16) {
+                    VStack(spacing: 16) {
                         identitySection
                         buyTransactionSection
                         lotMethodSection
@@ -84,6 +84,7 @@ struct AddHoldingView: View {
                     }
                     .padding(16)
                 }
+                .scrollDismissesKeyboard(.interactively)
             }
             .navigationTitle("Add Holding")
             .navigationBarTitleDisplayMode(.inline)
@@ -335,12 +336,15 @@ struct AddHoldingView: View {
                             .font(.system(size: 14, design: .monospaced))
                             .foregroundColor(.textPrimary)
                             .tint(.appBlue)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.characters)
                             .onChange(of: symbol) { _, newValue in
-                                symbol = newValue.uppercased()
+                                let upper = newValue.uppercased()
+                                if upper != newValue { symbol = upper }
                                 name = ""
                                 sector = ""
                                 if assetType == .options, !newValue.isEmpty {
-                                    name = "\(newValue.uppercased()) \(optionType.displayName)"
+                                    name = "\(upper) \(optionType.displayName)"
                                 }
                             }
                     }
