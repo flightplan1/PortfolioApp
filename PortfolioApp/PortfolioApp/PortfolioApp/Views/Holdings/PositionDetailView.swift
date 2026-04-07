@@ -105,10 +105,10 @@ struct PositionDetailView: View {
                 .sorted { $0.purchaseDate < $1.purchaseDate }   // FIFO order
 
             var remainingUnlinked = unlinkedProceeds
-            var remainingDate = unlinkedLatestDate
+            let remainingDate = unlinkedLatestDate
 
             // Group unlinked sells by quantity for exact-match attempt
-            var unlinkedSells = sellTxs.filter { $0.lotId == nil }
+            let unlinkedSells = sellTxs.filter { $0.lotId == nil }
                 .sorted { $0.tradeDate < $1.tradeDate }
 
             for tx in unlinkedSells {

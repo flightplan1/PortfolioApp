@@ -121,15 +121,24 @@ struct RootView: View {
     @ObservedObject private var splitService = SplitService.shared
     @Environment(\.managedObjectContext) private var context
 
+    private var isLocked: Bool {
+        appLockManager.lockEnabled && !appLockManager.isUnlocked
+    }
+
     var body: some View {
         ZStack {
-            if appLockManager.lockEnabled && !appLockManager.isUnlocked {
+            // Always rendered so it's instant after unlock — but fully hidden when locked
+            ContentView()
+                .allowsHitTesting(!isLocked)
+
+            if isLocked {
+                // Opaque cover so zero financial data is visible before auth
+                Color.appBg.ignoresSafeArea()
                 LockScreen()
-            } else {
-                ContentView()
+                    .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: appLockManager.isUnlocked)
+        .animation(.easeInOut(duration: 0.25), value: isLocked)
         .sheet(item: Binding(
             get: { splitService.pendingSplits.first },
             set: { _ in }

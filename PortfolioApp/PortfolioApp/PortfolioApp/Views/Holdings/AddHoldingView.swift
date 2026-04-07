@@ -68,48 +68,61 @@ struct AddHoldingView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.appBg.ignoresSafeArea()
+        ZStack {
+            Color.appBg.ignoresSafeArea()
+                .onTapGesture {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
 
-                ScrollView {
-                    VStack(spacing: 16) {
-                        identitySection
-                        buyTransactionSection
-                        lotMethodSection
-                        if assetType != .cash && availableCash > 0 {
-                            cashDeductionCard
-                        }
-                        saveButton
+            ScrollView {
+                VStack(spacing: 16) {
+                    identitySection
+                    buyTransactionSection
+                    lotMethodSection
+                    if assetType != .cash && availableCash > 0 {
+                        cashDeductionCard
                     }
-                    .padding(16)
+                    saveButton
                 }
-                .scrollDismissesKeyboard(.interactively)
+                .padding(16)
             }
-            .navigationTitle("Add Holding")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(.textSub)
+        }
+        .navigationTitle("Add Holding")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Cancel") { dismiss() }
+                    .foregroundColor(.textSub)
+            }
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 }
+                .fontWeight(.semibold)
             }
-            .alert("Check Your Inputs", isPresented: $showValidationError) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(validationMessage)
+        }
+        .alert("Check Your Inputs", isPresented: $showValidationError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(validationMessage)
+        }
+        .task(id: symbol + assetType.rawValue) {
+            // Options: auto-set name when symbol changes
+            if assetType == .options && !symbol.isEmpty {
+                await MainActor.run { name = "\(symbol) \(optionType.displayName)" }
             }
-            .task(id: symbol + assetType.rawValue) {
-                guard !symbol.isEmpty, assetType == .stock || assetType == .etf else { return }
-                try? await Task.sleep(nanoseconds: 600_000_000) // 600ms debounce
-                guard !Task.isCancelled else { return }
-                await lookupSymbolProfile()
-            }
-            .onAppear {
-                availableCash = CashLedgerService.availableBalance(in: context)
-                deductFromCash = availableCash > 0
-            }
+            guard !symbol.isEmpty, assetType == .stock || assetType == .etf else { return }
+            // Clear stale lookup results, then debounce before fetching
+            await MainActor.run { name = ""; sector = "" }
+            try? await Task.sleep(nanoseconds: 600_000_000) // 600ms debounce
+            guard !Task.isCancelled else { return }
+            await lookupSymbolProfile()
+        }
+        .onAppear {
+            availableCash = CashLedgerService.availableBalance(in: context)
+            deductFromCash = availableCash > 0
         }
     }
 
@@ -338,14 +351,11 @@ struct AddHoldingView: View {
                             .tint(.appBlue)
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.characters)
+                            .submitLabel(.done)
+                            .onSubmit { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
                             .onChange(of: symbol) { _, newValue in
                                 let upper = newValue.uppercased()
                                 if upper != newValue { symbol = upper }
-                                name = ""
-                                sector = ""
-                                if assetType == .options, !newValue.isEmpty {
-                                    name = "\(upper) \(optionType.displayName)"
-                                }
                             }
                     }
 

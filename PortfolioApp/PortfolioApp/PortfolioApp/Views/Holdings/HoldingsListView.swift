@@ -115,8 +115,10 @@ struct HoldingsListView: View {
                 }
             }
             .sheet(isPresented: $showAddHolding) {
-                AddHoldingView()
-                    .environment(\.managedObjectContext, context)
+                NavigationStack {
+                    AddHoldingView()
+                        .environment(\.managedObjectContext, context)
+                }
             }
             .sheet(isPresented: $showDepositCash) {
                 DepositCashView()

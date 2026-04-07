@@ -356,7 +356,8 @@ struct PnLView: View {
         let marketValue: Decimal
         let unrealizedPnL: Decimal
         let unrealizedPct: Decimal
-        let todayChangePct: Decimal
+        let todayChange: Decimal      // dollar impact on portfolio today
+        let todayChangePct: Decimal   // % move of the underlying
     }
 
     private var holdingRows: [HoldingPnLRow] {
@@ -368,19 +369,23 @@ struct PnLView: View {
                 let costBasis = lots.reduce(Decimal(0)) { $0 + $1.totalCostBasis }
                 return HoldingPnLRow(id: h.id, symbol: h.symbol, name: h.name,
                                      assetType: h.assetType, marketValue: costBasis,
-                                     unrealizedPnL: 0, unrealizedPct: 0, todayChangePct: 0)
+                                     unrealizedPnL: 0, unrealizedPct: 0, todayChange: 0, todayChangePct: 0)
             }
             guard let price = priceService.currentPrice(for: h.symbol) else { return nil }
-            let m       = h.lotMultiplier
-            let dir     = h.pnlDirection
-            let mv      = lots.reduce(Decimal(0)) { $0 + $1.equityContribution(at: price, multiplier: m, pnlDirection: dir) }
-            let basis   = lots.reduce(Decimal(0)) { $0 + ($1.remainingQty * $1.splitAdjustedCostBasisPerShare * m).rounded(to: 2) }
-            let pnl     = lots.reduce(Decimal(0)) { $0 + $1.unrealizedPnL(at: price, multiplier: m) * dir }
-            let pct     = basis > 0 ? (pnl / basis * 100).rounded(to: 2) : 0
-            let dayPct  = (priceService.dailyChangePercent(for: h.symbol) ?? 0) * dir
+            let m        = h.lotMultiplier
+            let dir      = h.pnlDirection
+            let mv       = lots.reduce(Decimal(0)) { $0 + $1.equityContribution(at: price, multiplier: m, pnlDirection: dir) }
+            let basis    = lots.reduce(Decimal(0)) { $0 + ($1.remainingQty * $1.splitAdjustedCostBasisPerShare * m).rounded(to: 2) }
+            let pnl      = lots.reduce(Decimal(0)) { $0 + $1.unrealizedPnL(at: price, multiplier: m) * dir }
+            let pct      = basis > 0 ? (pnl / basis * 100).rounded(to: 2) : 0
+            let dayPct   = (priceService.dailyChangePercent(for: h.symbol) ?? 0) * dir
+            let dayAmt   = lots.reduce(Decimal(0)) { sum, lot in
+                guard let change = priceService.dailyChange(for: h.symbol) else { return sum }
+                return sum + (lot.remainingQty * change * m * dir).rounded(to: 2)
+            }
             return HoldingPnLRow(id: h.id, symbol: h.symbol, name: h.name,
                                  assetType: h.assetType, marketValue: mv,
-                                 unrealizedPnL: pnl, unrealizedPct: pct, todayChangePct: dayPct)
+                                 unrealizedPnL: pnl, unrealizedPct: pct, todayChange: dayAmt, todayChangePct: dayPct)
         }
         .sorted { abs($0.unrealizedPnL) > abs($1.unrealizedPnL) }
     }
@@ -746,9 +751,12 @@ struct PnLView: View {
                         Text("TODAY")
                             .font(AppFont.mono(8))
                             .foregroundColor(.textMuted)
-                        Text(row.todayChangePct.asPercentSigned())
+                        Text(row.todayChange.asCurrencyCompact)
                             .font(AppFont.mono(12, weight: .semibold))
-                            .foregroundColor(Color.pnlColor(row.todayChangePct))
+                            .foregroundColor(Color.pnlColor(row.todayChange))
+                        Text(row.todayChangePct.asPercentSigned())
+                            .font(AppFont.mono(10))
+                            .foregroundColor(Color.pnlColor(row.todayChange).opacity(0.75))
                     }
                 }
                 .padding(.horizontal, 20)
