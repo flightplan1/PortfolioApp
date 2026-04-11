@@ -8,6 +8,7 @@ struct AddLotView: View {
 
     @Environment(\.managedObjectContext) private var context
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("defaultOptionsFeePerContract") private var defaultOptionsFeePerContract: Double = 0
 
     @FetchRequest private var existingLots: FetchedResults<Lot>
 
@@ -98,6 +99,12 @@ struct AddLotView: View {
                     availableCash = CashLedgerService.availableBalance(in: context)
                     deductFromCash = availableCash > 0
                 }
+            }
+            .onChange(of: quantity) { _, newValue in
+                guard holding.isOption, defaultOptionsFeePerContract > 0,
+                      !isEditMode,
+                      let contracts = Int(newValue), contracts > 0 else { return }
+                fee = String(format: "%.2f", Double(contracts) * defaultOptionsFeePerContract)
             }
         }
     }
@@ -199,14 +206,17 @@ struct AddLotView: View {
                 // Cost basis preview
                 if let costBasis = totalCostBasis {
                     Divider().background(Color.appBorder)
+                    let costLabel: String = holding.isOption
+                        ? (holding.isShortPosition ? "Premium received (net)" : "Total premium paid")
+                        : "Total cost basis"
                     HStack {
-                        Text("Total cost basis")
+                        Text(costLabel)
                             .font(.system(size: 12))
                             .foregroundColor(.textSub)
                         Spacer()
                         Text(costBasis.rounded(to: 2).asCurrency)
                             .font(.system(size: 12, weight: .semibold, design: .monospaced))
-                            .foregroundColor(.textPrimary)
+                            .foregroundColor(holding.isOption && holding.isShortPosition ? .appGreen : .textPrimary)
                     }
                 }
             }
@@ -294,7 +304,8 @@ struct AddLotView: View {
               qty > 0, price > 0 else { return nil }
         let feeDecimal = Decimal.from(fee) ?? 0
         if holding.isOption, let contracts = Int(quantity) {
-            return OptionsCalculator.totalCost(contracts: contracts, premiumPerShare: price, fee: feeDecimal)
+            let gross = Decimal(contracts) * price * 100
+            return holding.isShortPosition ? (gross - feeDecimal) : (gross + feeDecimal)
         }
         return qty * price + feeDecimal
     }
@@ -324,17 +335,50 @@ struct AddLotView: View {
         let feeDecimal = Decimal.from(fee) ?? 0
 
         if let existingLot = lot {
-            // Edit mode — update cost basis and date only
-            let feePerShare = qty > 0 ? feeDecimal / qty : 0
+            // Edit mode — update lot cost basis and date
+            let effectiveQty = canEditQty ? qty : existingLot.originalQty
+            let totalShares = holding.isOption ? effectiveQty * 100 : effectiveQty
+            let feePerShare = totalShares > 0 ? feeDecimal / totalShares : 0
             let adjustedBasis = price + feePerShare
             existingLot.originalCostBasisPerShare = adjustedBasis
             existingLot.splitAdjustedCostBasisPerShare = adjustedBasis
-            existingLot.totalCostBasis = (qty * price + feeDecimal).rounded(to: 2)
+            if holding.isOption {
+                let contracts = NSDecimalNumber(decimal: effectiveQty).intValue
+                let gross = Decimal(contracts) * price * 100
+                existingLot.totalCostBasis = holding.isShortPosition
+                    ? (gross - feeDecimal).rounded(to: 2)
+                    : (gross + feeDecimal).rounded(to: 2)
+            } else {
+                existingLot.totalCostBasis = (effectiveQty * price + feeDecimal).rounded(to: 2)
+            }
             existingLot.purchaseDate = tradeDate
             if canEditQty {
                 existingLot.originalQty = qty
                 existingLot.splitAdjustedQty = qty
                 existingLot.remainingQty = qty
+            }
+
+            // Also update the linked buy transaction so it stays in sync
+            let txReq = Transaction.fetchRequest() as NSFetchRequest<Transaction>
+            txReq.predicate = NSPredicate(
+                format: "holdingId == %@ AND lotId == %@ AND typeRaw == 'buy' AND isSoftDeleted == NO",
+                holding.id as CVarArg, existingLot.id as CVarArg
+            )
+            txReq.fetchLimit = 1
+            if let linkedTx = (try? context.fetch(txReq))?.first {
+                linkedTx.pricePerShare = price
+                linkedTx.fee = feeDecimal
+                linkedTx.tradeDate = tradeDate
+                linkedTx.quantity = effectiveQty
+                if holding.isOption {
+                    let contracts = NSDecimalNumber(decimal: effectiveQty).intValue
+                    let gross = Decimal(contracts) * price * 100
+                    linkedTx.totalAmount = holding.isShortPosition
+                        ? (gross - feeDecimal).rounded(to: 2)
+                        : (gross + feeDecimal).rounded(to: 2)
+                } else {
+                    linkedTx.totalAmount = (effectiveQty * price + feeDecimal).rounded(to: 2)
+                }
             }
         } else {
             // Add mode — create new lot + transaction
@@ -356,7 +400,7 @@ struct AddLotView: View {
                 source: .manual
             )
 
-            _ = Transaction.createBuy(
+            let newTx = Transaction.createBuy(
                 in: context,
                 holdingId: holding.id,
                 lotId: newLot.id,
@@ -365,6 +409,13 @@ struct AddLotView: View {
                 fee: feeDecimal,
                 tradeDate: tradeDate
             )
+            // Fix totalAmount for options (Transaction.createBuy doesn't apply ×100)
+            if holding.isOption, let contracts = Int(quantity) {
+                let gross = Decimal(contracts) * price * 100
+                newTx.totalAmount = holding.isShortPosition
+                    ? (gross - feeDecimal).rounded(to: 2)
+                    : (gross + feeDecimal).rounded(to: 2)
+            }
         }
 
         do {

@@ -6,6 +6,7 @@ struct AddHoldingView: View {
     @Environment(\.managedObjectContext) private var context
     @Environment(\.dismiss) private var dismiss
     @AppStorage("defaultBankFee") private var defaultBankFee: Double = 0
+    @AppStorage("defaultOptionsFeePerContract") private var defaultOptionsFeePerContract: Double = 0
 
     // MARK: - Form State
 
@@ -123,6 +124,16 @@ struct AddHoldingView: View {
         .onAppear {
             availableCash = CashLedgerService.availableBalance(in: context)
             deductFromCash = availableCash > 0
+        }
+        .onChange(of: quantity) { _, newValue in
+            // Auto-populate fee from default per-contract rate when entering options contracts
+            guard assetType == .options, defaultOptionsFeePerContract > 0,
+                  let contracts = Int(newValue), contracts > 0 else { return }
+            fee = String(format: "%.2f", Double(contracts) * defaultOptionsFeePerContract)
+        }
+        .onChange(of: assetType) { _, newType in
+            // Reset auto-fee when switching away from options
+            if newType != .options { fee = "" }
         }
     }
 
@@ -546,14 +557,20 @@ struct AddHoldingView: View {
 
                 // Cost basis preview
                 if let costBasis = totalCostBasis {
+                    let costLabel: String = {
+                        if assetType == .options {
+                            return isShortPosition ? "Premium received (net)" : "Total premium paid"
+                        }
+                        return "Total cost basis"
+                    }()
                     HStack {
-                        Text("Total cost basis")
+                        Text(costLabel)
                             .font(.system(size: 12))
                             .foregroundColor(.textSub)
                         Spacer()
                         Text(costBasis.rounded(to: 2).asCurrency)
                             .font(.system(size: 12, weight: .semibold, design: .monospaced))
-                            .foregroundColor(.textPrimary)
+                            .foregroundColor(assetType == .options && isShortPosition ? .appGreen : .textPrimary)
                     }
                     .padding(.top, 4)
                 }
@@ -728,7 +745,10 @@ struct AddHoldingView: View {
               qty > 0, price > 0 else { return nil }
         let feeDecimal = Decimal.from(fee) ?? 0
         if assetType == .options, let contracts = Int(quantity) {
-            return OptionsCalculator.totalCost(contracts: contracts, premiumPerShare: price, fee: feeDecimal)
+            let gross = Decimal(contracts) * price * 100
+            // STO: premium received (income) = gross − fee
+            // BTO: premium paid (cost)        = gross + fee
+            return isShortPosition ? (gross - feeDecimal) : (gross + feeDecimal)
         }
         return qty * price + feeDecimal
     }
@@ -863,6 +883,14 @@ struct AddHoldingView: View {
             tradeDate: tradeDate,
             lotMethod: lotMethod
         )
+
+        // Fix transaction totalAmount for options (Transaction.createBuy doesn't know about ×100)
+        if assetType == .options, let contracts = Int(quantity) {
+            let gross = Decimal(contracts) * price * 100
+            transaction.totalAmount = isShortPosition
+                ? (gross - feeDecimal).rounded(to: 2)   // STO: premium received (income)
+                : (gross + feeDecimal).rounded(to: 2)   // BTO: premium paid (cost)
+        }
 
         do {
             try context.save()

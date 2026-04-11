@@ -34,6 +34,7 @@ struct SettingsView: View {
     @State private var isTesting: Bool = false
     @State private var showDeleteConfirm: Bool = false
     @State private var showImport = false
+    @AppStorage("defaultOptionsFeePerContract") private var defaultOptionsFeePerContract: Double = 0
     @State private var exportURL: URL?
     @State private var showExportShare = false
     @State private var exportError: String?
@@ -48,6 +49,7 @@ struct SettingsView: View {
                 VStack(spacing: 16) {
                     taxProfileSection
                     taxRatesDataSection
+                    optionsDefaultsSection
                     apiKeysSection
                     notificationsSection
                     securitySection
@@ -180,6 +182,57 @@ struct SettingsView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
+    }
+
+    // MARK: - Options Defaults Section
+
+    private var optionsDefaultsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("OPTIONS DEFAULTS")
+                .sectionTitleStyle()
+                .padding(.horizontal, 4)
+
+            VStack(spacing: 0) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Default Fee per Contract")
+                            .font(AppFont.body(14))
+                            .foregroundColor(.textPrimary)
+                        Text("Auto-calculates commission when entering options trades")
+                            .font(AppFont.body(11))
+                            .foregroundColor(.textSub)
+                    }
+                    Spacer()
+                    HStack(spacing: 4) {
+                        Text("$")
+                            .font(AppFont.mono(14))
+                            .foregroundColor(.textMuted)
+                        TextField("0.65", value: $defaultOptionsFeePerContract, format: .number)
+                            .font(AppFont.mono(14, weight: .semibold))
+                            .foregroundColor(.textPrimary)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 60)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+
+                Divider().background(Color.appBorder)
+
+                HStack(spacing: 8) {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 11))
+                        .foregroundColor(.textMuted)
+                    Text("e.g. TD Ameritrade / Schwab = $0.65/contract. Set to 0 to disable auto-fill.")
+                        .font(AppFont.body(11))
+                        .foregroundColor(.textMuted)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+            }
+            .cardStyle()
+        }
     }
 
     // MARK: - Tax Rates Data Section

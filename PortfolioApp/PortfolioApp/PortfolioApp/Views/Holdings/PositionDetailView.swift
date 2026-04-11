@@ -179,6 +179,20 @@ struct PositionDetailView: View {
 
     private var currentPrice: Decimal? { priceData?.currentPrice }
 
+    /// For options: current price of the underlying stock (used for % to strike).
+    private var underlyingPrice: Decimal? {
+        guard holding.isOption else { return nil }
+        return priceService.currentPrice(for: holding.symbol)
+    }
+
+    /// % distance from current underlying price to strike price.
+    /// Positive = underlying is above strike; negative = below.
+    private var percentToStrike: Decimal? {
+        guard let underlying = underlyingPrice,
+              let strike = holding.strikePrice, strike > 0 else { return nil }
+        return ((underlying - strike) / strike * 100).rounded(to: 2)
+    }
+
     /// Current market value of the position.
     /// Options: current option price × contracts × 100 (cost-to-close for STO, proceeds-if-closed for BTO).
     private var marketValue: Decimal? {
@@ -560,6 +574,17 @@ struct PositionDetailView: View {
                         statTile(label: holding.isShortPosition ? "STO PREMIUM" : "BTO PREMIUM",
                                  value: avgCostPerShare.asCurrency)
                         statTile(label: "CONTRACTS", value: totalQty.asQuantity(maxDecimalPlaces: 0))
+                        if let pct = percentToStrike {
+                            let label = pct >= 0 ? "% ABOVE STRIKE" : "% BELOW STRIKE"
+                            let color: Color = holding.optionType == .call
+                                ? (pct >= 0 ? .appGreen : .appRed)
+                                : (pct >= 0 ? .appRed : .appGreen)
+                            statTileColored(label: label,
+                                            value: "\(pct >= 0 ? "+" : "")\(pct.asPercent(decimalPlaces: 2))",
+                                            color: color)
+                        } else {
+                            statTile(label: "% TO STRIKE", value: "—")
+                        }
                     } else {
                         statTile(label: "PRICE", value: currentPrice?.asCurrency ?? "—")
                         statTile(label: "AVG COST", value: avgCostPerShare.asCurrency)
@@ -608,6 +633,24 @@ struct PositionDetailView: View {
             Text(value)
                 .font(AppFont.statValue)
                 .foregroundColor(.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .statTileStyle()
+    }
+
+    private func statTileColored(label: String, value: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(AppFont.statLabel)
+                .foregroundColor(.textMuted)
+                .textCase(.uppercase)
+                .kerning(0.5)
+            Text(value)
+                .font(AppFont.statValue)
+                .foregroundColor(color)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }
@@ -862,7 +905,8 @@ struct PositionDetailView: View {
                         Button {
                             transactionToEdit = tx
                         } label: {
-                            TransactionRowView(transaction: tx, isOption: holding.isOption)
+                            TransactionRowView(transaction: tx, isOption: holding.isOption,
+                                              isShortPosition: holding.isShortPosition)
                         }
                         .buttonStyle(.plain)
                         .contentShape(Rectangle())
@@ -1320,19 +1364,51 @@ struct ClosedLotRowView: View {
 struct TransactionRowView: View {
     @ObservedObject var transaction: Transaction
     let isOption: Bool
+    var isShortPosition: Bool = false
 
     private var isBuy: Bool { transaction.type == .buy || transaction.type == .drip || transaction.type == .transferIn }
-    private var typeColor: Color { isBuy ? Color.appBlue : Color.appRed }
+
+    private var typeLabel: String {
+        if isOption {
+            if transaction.type == .buy  { return isShortPosition ? "STO" : "BTO" }
+            if transaction.type == .sell { return isShortPosition ? "BTC" : "STC" }
+        }
+        switch transaction.type {
+        case .buy:         return "BUY"
+        case .sell:        return "SELL"
+        case .drip:        return "DRIP"
+        case .dividend:    return "DIV"
+        case .split:       return "SPLIT"
+        case .transferIn:  return "IN"
+        case .transferOut: return "OUT"
+        }
+    }
+
+    private var typeColor: Color {
+        // STO opening = income → green; BTC closing = cost → red
+        if isOption && isShortPosition {
+            return transaction.type == .buy ? Color.appGreen : Color.appRed
+        }
+        return isBuy ? Color.appBlue : Color.appRed
+    }
+
+    private var amountColor: Color {
+        // STO opening income: show in green
+        if isOption && isShortPosition && transaction.type == .buy { return .appGreen }
+        return .textPrimary
+    }
+
+    private var amountDisplay: String {
+        if isOption && isShortPosition && transaction.type == .buy {
+            return "+\(transaction.totalAmount.asCurrency)"
+        }
+        return transaction.totalAmount.asCurrency
+    }
 
     var body: some View {
         HStack(spacing: 12) {
             // Type badge
-            Text(transaction.type == .buy ? "BUY" :
-                 transaction.type == .sell ? "SELL" :
-                 transaction.type == .drip ? "DRIP" :
-                 transaction.type == .dividend ? "DIV" :
-                 transaction.type == .split ? "SPLIT" :
-                 transaction.type == .transferIn ? "IN" : "OUT")
+            Text(typeLabel)
                 .font(AppFont.mono(10, weight: .bold))
                 .foregroundColor(typeColor)
                 .frame(width: 34)
@@ -1351,9 +1427,9 @@ struct TransactionRowView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 4) {
-                Text(transaction.totalAmount.asCurrency)
+                Text(amountDisplay)
                     .font(AppFont.mono(12, weight: .semibold))
-                    .foregroundColor(.textPrimary)
+                    .foregroundColor(amountColor)
                 if transaction.fee > 0 {
                     Text("fee \(transaction.fee.asCurrency)")
                         .font(AppFont.mono(10))
