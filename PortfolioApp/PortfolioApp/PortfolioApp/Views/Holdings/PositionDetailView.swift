@@ -144,7 +144,10 @@ struct PositionDetailView: View {
                   let saleDate = saleDateMap[lot.id] else { continue }
             let ltThreshold = Calendar.current.date(byAdding: .day, value: 366, to: lot.purchaseDate)!
             let isLT = saleDate > ltThreshold
-            let gain = (proceeds - lot.totalCostBasis) * dir
+            // Use per-share basis × qty × multiplier (robust against stored totalCostBasis being wrong)
+            let lotBasis = (lot.splitAdjustedCostBasisPerShare * lot.originalQty * holding.lotMultiplier)
+                .rounded(to: 2)
+            let gain = (proceeds - lotBasis) * dir
             result[lot.id] = ClosedLotData(
                 proceeds: proceeds,
                 gain: gain,
@@ -159,15 +162,23 @@ struct PositionDetailView: View {
         openLots.reduce(0) { $0 + $1.remainingQty }
     }
 
+    /// Total cost basis computed from per-share basis × qty × multiplier.
+    /// Uses splitAdjustedCostBasisPerShare rather than the stored totalCostBasis field,
+    /// which may be incorrect for options lots created without the ×100 multiplier.
     private var totalCostBasis: Decimal {
-        openLots.reduce(0) { $0 + $1.totalCostBasis }
+        openLots.reduce(Decimal(0)) { sum, lot in
+            (sum + lot.splitAdjustedCostBasisPerShare * lot.remainingQty * holding.lotMultiplier)
+                .rounded(to: 2)
+        }
     }
 
+    /// Weighted average premium/price per share across all open lots.
+    /// For options this is the premium per share (not per contract).
     private var avgCostPerShare: Decimal {
         guard totalQty > 0 else { return 0 }
-        // Options: totalCostBasis includes ×100 multiplier — divide by totalQty×100 for premium per share
-        let denom = holding.isOption ? totalQty * 100 : totalQty
-        return (totalCostBasis / denom).rounded(to: 4)
+        return (openLots.reduce(Decimal(0)) { sum, lot in
+            sum + lot.splitAdjustedCostBasisPerShare * lot.remainingQty
+        } / totalQty).rounded(to: 4)
     }
 
     private var priceData: PriceData? {

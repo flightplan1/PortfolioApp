@@ -397,7 +397,8 @@ struct AddLotView: View {
                 costBasisPerShare: price,
                 purchaseDate: tradeDate,
                 fee: feeDecimal,
-                source: .manual
+                source: .manual,
+                contractMultiplier: holding.isOption ? 100 : 1
             )
 
             let newTx = Transaction.createBuy(
