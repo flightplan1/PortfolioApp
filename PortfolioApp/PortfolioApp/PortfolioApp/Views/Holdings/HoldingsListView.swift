@@ -367,15 +367,20 @@ struct HoldingRowView: View {
         openLots.reduce(0) { $0 + $1.remainingQty }
     }
 
+    /// Computed from per-share basis × qty × multiplier — robust against stored totalCostBasis
+    /// being incorrect for options lots created without the ×100 contractMultiplier.
     private var totalCostBasis: Decimal {
-        openLots.reduce(0) { $0 + $1.totalCostBasis }
+        openLots.reduce(Decimal(0)) { sum, lot in
+            (sum + lot.splitAdjustedCostBasisPerShare * lot.remainingQty * holding.lotMultiplier)
+                .rounded(to: 2)
+        }
     }
 
     private var avgCostPerShare: Decimal {
         guard totalQty > 0 else { return 0 }
-        // For options, totalCostBasis includes ×100 multiplier; divide by totalQty×100 to get premium per share.
-        let shares = holding.isOption ? totalQty * 100 : totalQty
-        return (totalCostBasis / shares).rounded(to: 4)
+        return (openLots.reduce(Decimal(0)) { sum, lot in
+            sum + lot.splitAdjustedCostBasisPerShare * lot.remainingQty
+        } / totalQty).rounded(to: 4)
     }
 
     private var priceData: PriceData? {
