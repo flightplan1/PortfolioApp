@@ -35,6 +35,7 @@ struct SettingsView: View {
     @State private var showDeleteConfirm: Bool = false
     @State private var showImport = false
     @AppStorage("defaultOptionsFeePerContract") private var defaultOptionsFeePerContract: Double = 0
+    @State private var defaultFeeText: String = ""
     @State private var exportURL: URL?
     @State private var showExportShare = false
     @State private var exportError: String?
@@ -207,12 +208,22 @@ struct SettingsView: View {
                         Text("$")
                             .font(AppFont.mono(14))
                             .foregroundColor(.textMuted)
-                        TextField("0.65", value: $defaultOptionsFeePerContract, format: .number)
+                        TextField("0.65", text: $defaultFeeText)
                             .font(AppFont.mono(14, weight: .semibold))
                             .foregroundColor(.textPrimary)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 60)
+                            .onAppear {
+                                if defaultOptionsFeePerContract > 0 {
+                                    defaultFeeText = String(format: "%.2f", defaultOptionsFeePerContract)
+                                }
+                            }
+                            .onChange(of: defaultFeeText) { _, newValue in
+                                if let parsed = Double(newValue) {
+                                    defaultOptionsFeePerContract = parsed
+                                }
+                            }
                     }
                 }
                 .padding(.horizontal, 16)

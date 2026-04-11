@@ -30,6 +30,9 @@ struct PositionDetailView: View {
     @State private var lotToEdit:   Lot?
     @State private var lotToSell:   Lot?
     @State private var lotToDelete: Lot?
+    @State private var cashLotToEdit: Lot?
+    @State private var showResetCashConfirm = false
+    @State private var showEditHolding = false
     @State private var splitToRevert: SplitEvent?
     @State private var showRevertAlert = false
     @State private var revertAlertMessage = ""
@@ -284,6 +287,11 @@ struct PositionDetailView: View {
     private var trailingToolbarButtons: some View {
         HStack(spacing: 4) {
             if holding.assetType == .cash {
+                Button { showEditHolding = true } label: {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.textSub)
+                }
                 Button { showWithdrawCash = true } label: {
                     Text("Withdraw")
                         .font(.system(size: 14, weight: .semibold))
@@ -365,7 +373,10 @@ struct PositionDetailView: View {
                     notesCard
                     accountTypeCard
                 }
-                .onAppear { noteDraft = holding.notes ?? "" }
+                .onAppear {
+                    noteDraft = holding.notes ?? ""
+                    if holding.assetType == .cash { lotsCollapsed = false }
+                }
                 .padding(16)
                 .padding(.bottom, 16)
             }
@@ -422,6 +433,14 @@ struct PositionDetailView: View {
             AddLotView(holding: holding, lot: lot)
                 .environment(\.managedObjectContext, context)
         }
+        .sheet(item: $cashLotToEdit) { lot in
+            EditCashEntryView(lot: lot)
+                .environment(\.managedObjectContext, context)
+        }
+        .sheet(isPresented: $showEditHolding) {
+            EditHoldingView(holding: holding)
+                .environment(\.managedObjectContext, context)
+        }
         .sheet(item: $transactionToEdit) { tx in
             EditTransactionView(transaction: tx)
                 .environment(\.managedObjectContext, context)
@@ -444,6 +463,12 @@ struct PositionDetailView: View {
             }
         } message: {
             Text("This will remove Lot #\(lotToDelete?.lotNumber ?? 0). This action cannot be undone.")
+        }
+        .alert("Clear All Cash Entries?", isPresented: $showResetCashConfirm) {
+            Button("Cancel", role: .cancel) {}
+            Button("Clear All", role: .destructive) { resetCashBalance() }
+        } message: {
+            Text("This will permanently delete all cash deposit entries and reset your balance to zero. This cannot be undone.")
         }
         .alert("Revert Split", isPresented: $showRevertAlert) {
             Button("Cancel", role: .cancel) { splitToRevert = nil }
@@ -522,6 +547,11 @@ struct PositionDetailView: View {
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.appBorder, lineWidth: 1))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.25), radius: 12, y: 4)
+    }
+
+    private func resetCashBalance() {
+        for lot in openLots { lot.softDelete() }
+        try? context.save()
     }
 
     // MARK: - Summary Card
@@ -674,23 +704,37 @@ struct PositionDetailView: View {
 
     private var lotsCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) { lotsCollapsed.toggle() }
-            } label: {
-                HStack {
-                    Text("LOTS")
-                        .sectionTitleStyle()
-                    Spacer()
-                    Text("\(openLots.count) lot\(openLots.count == 1 ? "" : "s")")
-                        .font(AppFont.mono(10))
-                        .foregroundColor(.textMuted)
-                    Image(systemName: lotsCollapsed ? "chevron.down" : "chevron.up")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(.textMuted)
-                        .padding(.leading, 4)
+            HStack {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) { lotsCollapsed.toggle() }
+                } label: {
+                    HStack {
+                        Text("LOTS")
+                            .sectionTitleStyle()
+                        Spacer()
+                        Text("\(openLots.count) lot\(openLots.count == 1 ? "" : "s")")
+                            .font(AppFont.mono(10))
+                            .foregroundColor(.textMuted)
+                        Image(systemName: lotsCollapsed ? "chevron.down" : "chevron.up")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(.textMuted)
+                            .padding(.leading, 4)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                if holding.assetType == .cash && !openLots.isEmpty {
+                    Button {
+                        showResetCashConfirm = true
+                    } label: {
+                        Text("Clear All")
+                            .font(AppFont.mono(10, weight: .semibold))
+                            .foregroundColor(.appRed)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.leading, 8)
                 }
             }
-            .buttonStyle(.plain)
             .padding(.horizontal, 4)
 
             if !lotsCollapsed {
@@ -724,7 +768,11 @@ struct PositionDetailView: View {
                                     lotToSell = lot
                                 }
                                 lotActionButton(label: "Edit", color: .appBlue, icon: "pencil") {
-                                    lotToEdit = lot
+                                    if holding.assetType == .cash {
+                                        cashLotToEdit = lot
+                                    } else {
+                                        lotToEdit = lot
+                                    }
                                 }
                                 lotActionButton(label: "Delete", color: .textMuted, icon: "trash") {
                                     lotToDelete = lot
