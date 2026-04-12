@@ -241,6 +241,19 @@ struct SettingsView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
+
+                Divider().background(Color.appBorder)
+
+                Button {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                } label: {
+                    Text("Save")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.appBlue)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                }
+                .buttonStyle(.plain)
             }
             .cardStyle()
         }

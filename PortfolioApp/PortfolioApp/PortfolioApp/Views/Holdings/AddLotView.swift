@@ -98,6 +98,10 @@ struct AddLotView: View {
                 if !isEditMode {
                     availableCash = CashLedgerService.availableBalance(in: context)
                     deductFromCash = availableCash > 0
+                    // Pre-fill fee from default when adding a new options lot
+                    if holding.isOption && defaultOptionsFeePerContract > 0 && fee.isEmpty {
+                        fee = String(format: "%.2f", defaultOptionsFeePerContract)
+                    }
                 }
             }
             .onChange(of: quantity) { _, newValue in

@@ -581,9 +581,17 @@ struct PositionDetailView: View {
                 }
                 Spacer()
                 if holding.assetType == .cash {
-                    Text(totalQty.asCurrency)
-                        .font(AppFont.mono(18, weight: .bold))
-                        .foregroundColor(.appGreen)
+                    Button { showEditHolding = true } label: {
+                        HStack(spacing: 6) {
+                            Text(totalQty.asCurrency)
+                                .font(AppFont.mono(18, weight: .bold))
+                                .foregroundColor(.appGreen)
+                            Image(systemName: "pencil")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.appGreen.opacity(0.6))
+                        }
+                    }
+                    .buttonStyle(.plain)
                 } else if let mv = marketValue {
                     VStack(alignment: .trailing, spacing: 4) {
                         Text(mv.asCurrency)

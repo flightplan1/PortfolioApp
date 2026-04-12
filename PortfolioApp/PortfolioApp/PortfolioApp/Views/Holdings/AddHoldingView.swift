@@ -132,8 +132,14 @@ struct AddHoldingView: View {
             fee = String(format: "%.2f", Double(contracts) * defaultOptionsFeePerContract)
         }
         .onChange(of: assetType) { _, newType in
-            // Reset auto-fee when switching away from options
-            if newType != .options { fee = "" }
+            if newType != .options {
+                fee = ""
+            } else if defaultOptionsFeePerContract > 0 {
+                // Pre-fill fee when switching to options:
+                // use quantity if already entered, otherwise show the per-contract default (for 1 contract)
+                let contracts = Int(quantity) ?? 1
+                fee = String(format: "%.2f", Double(contracts) * defaultOptionsFeePerContract)
+            }
         }
     }
 
