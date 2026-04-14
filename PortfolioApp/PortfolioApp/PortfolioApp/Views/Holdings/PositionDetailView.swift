@@ -634,6 +634,7 @@ struct PositionDetailView: View {
                         } else {
                             statTile(label: "% TO STRIKE", value: "—")
                         }
+                        statTile(label: "UNDERLYING", value: underlyingPrice?.asCurrency ?? "—")
                     } else {
                         statTile(label: "PRICE", value: currentPrice?.asCurrency ?? "—")
                         statTile(label: "AVG COST", value: avgCostPerShare.asCurrency)
