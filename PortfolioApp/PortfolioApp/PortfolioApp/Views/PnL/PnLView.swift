@@ -96,7 +96,11 @@ struct PnLView: View {
         allOpenLots.reduce(Decimal(0)) { sum, lot in
             guard let h = holdingMap[lot.holdingId], h.assetType != .cash else { return sum }
             if h.isOption { return sum + lot.totalCostBasis }
-            guard let price = priceService.currentPrice(for: h.symbol) else { return sum }
+            guard let price = priceService.currentPrice(for: h.symbol) else {
+                // Price not yet loaded — use cost basis so this lot contributes 0 unrealized P&L
+                // rather than dragging the total negative
+                return sum + (lot.remainingQty * lot.splitAdjustedCostBasisPerShare * h.lotMultiplier).rounded(to: 2)
+            }
             return sum + lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
         }
     }
@@ -233,6 +237,24 @@ struct PnLView: View {
     }
 
     // MARK: - Chart Helpers
+
+    /// P&L for the currently selected time range: current value minus the first chart data point.
+    /// Falls back to all-time unrealized P&L when chart data isn't loaded yet.
+    private var rangePnL: Decimal {
+        guard let startValue = chartData.first.map({ Decimal($0.value) }),
+              startValue > 0 else { return unrealizedPnL }
+        let currentValue = Decimal(Double(truncating: totalPortfolioValue as NSDecimalNumber))
+        return (currentValue - startValue).rounded(to: 2)
+    }
+
+    private var rangePnLPct: Decimal? {
+        guard let startValue = chartData.first.map({ Decimal($0.value) }),
+              startValue > 0 else { return unrealizedPnLPct }
+        let currentValue = Decimal(Double(truncating: totalPortfolioValue as NSDecimalNumber))
+        return ((currentValue - startValue) / startValue * 100).rounded(to: 2)
+    }
+
+    private var rangeLabel: String { selectedRange.rawValue }
 
     private var costBasisDouble: Double {
         Double(truncating: totalCostBasis as NSDecimalNumber)
@@ -497,22 +519,22 @@ struct PnLView: View {
 
     private var chartCard: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Header: current value + change
+            // Header: current value + range change
             VStack(alignment: .leading, spacing: 4) {
                 Text(totalPortfolioValue.asCurrencyCompact)
                     .font(AppFont.mono(26, weight: .bold))
                     .foregroundColor(.textPrimary)
                 HStack(spacing: 6) {
-                    Image(systemName: unrealizedPnL >= 0 ? "arrow.up.right" : "arrow.down.right")
+                    Image(systemName: rangePnL >= 0 ? "arrow.up.right" : "arrow.down.right")
                         .font(.system(size: 11, weight: .semibold))
-                    Text("\(unrealizedPnL.asCurrencySigned) all-time")
+                    Text("\(rangePnL.asCurrencySigned) \(rangeLabel)")
                         .font(AppFont.mono(12, weight: .semibold))
-                    if let pct = unrealizedPnLPct {
+                    if let pct = rangePnLPct {
                         Text("(\(pct.asPercentSigned()))")
                             .font(AppFont.body(12))
                     }
                 }
-                .foregroundColor(Color.pnlColor(unrealizedPnL))
+                .foregroundColor(Color.pnlColor(rangePnL))
             }
             .padding(.horizontal, 20)
             .padding(.top, 20)
@@ -1081,72 +1103,89 @@ struct PnLView: View {
         guard !nonCashLots.isEmpty else { chartData = []; return }
 
         let days = selectedRange.days(earliestDate: earliestLotDate)
-        let symbols: [(symbol: String, source: PriceSource)] = holdings
-            .filter { $0.assetType != .cash }
+
+        // Fetch price history only for priceable (non-option, non-cash) holdings.
+        // Options are always carried at cost basis — no live option price on free tier.
+        let pricedSymbols: [(symbol: String, source: PriceSource)] = holdings
+            .filter { $0.assetType != .cash && !$0.isOption }
             .map { (symbol: $0.symbol, source: $0.priceSource) }
 
-        let priceHistory = await histService.fetchHistory(symbols: symbols, days: days)
+        let priceHistory = await histService.fetchHistory(symbols: pricedSymbols, days: days)
 
-        // Fallback: if no history but current prices exist, synthesize cost basis → current value
+        // No price history from API — build a synthetic chart from lot purchase dates.
+        // Each purchase date is a point at accumulated cost basis; today is at current market value.
+        // This gives a meaningful step-up chart without requiring historical price data.
         if priceHistory.isEmpty {
             let map = holdingMap
-            let today = Date()
+            let today = Calendar.current.startOfDay(for: Date())
             let rangeStart = Calendar.current.date(byAdding: .day, value: -days, to: today) ?? today
-            let currentValue = nonCashLots.reduce(0.0) { sum, lot in
-                guard let h = map[lot.holdingId] else { return sum }
-                // Options: carry at cost basis (no live option price on free tier)
-                if h.isOption {
-                    return sum + Double(truncating: lot.totalCostBasis as NSDecimalNumber)
+
+            // Key dates: rangeStart + each distinct purchase day within range + today
+            var keyDays: Set<Date> = [rangeStart, today]
+            for lot in nonCashLots {
+                let d = Calendar.current.startOfDay(for: lot.purchaseDate)
+                if d > rangeStart { keyDays.insert(d) }
+            }
+            let sortedDays = keyDays.sorted()
+
+            var syntheticPoints: [PortfolioDataPoint] = []
+            for day in sortedDays {
+                var value = 0.0
+                for lot in nonCashLots {
+                    let purchaseDay = Calendar.current.startOfDay(for: lot.purchaseDate)
+                    guard purchaseDay <= day else { continue }
+                    let h = map[lot.holdingId]
+                    // On today's point, use live price if available; otherwise fall back to cost basis
+                    if day == today, let h, !h.isOption,
+                       let price = priceService.currentPrice(for: h.symbol) {
+                        let qty = Double(truncating: lot.remainingQty as NSDecimalNumber)
+                        let dPrice = Double(truncating: price as NSDecimalNumber)
+                        if h.isShortPosition {
+                            let cb = Double(truncating: lot.splitAdjustedCostBasisPerShare as NSDecimalNumber)
+                            value += (cb - dPrice) * qty
+                        } else {
+                            value += qty * dPrice
+                        }
+                    } else {
+                        value += Double(truncating: lot.totalCostBasis as NSDecimalNumber)
+                    }
                 }
-                guard let price = priceService.currentPrice(for: h.symbol) else { return sum }
-                let qty        = Double(truncating: lot.remainingQty as NSDecimalNumber)
-                let multiplier = 1.0
-                if h.isShortPosition {
-                    let cb = Double(truncating: lot.splitAdjustedCostBasisPerShare as NSDecimalNumber)
-                    return sum + (cb - Double(truncating: price as NSDecimalNumber)) * qty * multiplier
-                }
-                return sum + qty * Double(truncating: price as NSDecimalNumber) * multiplier
+                if value > 0 { syntheticPoints.append(PortfolioDataPoint(date: day, value: value)) }
             }
-            let costBasisValue = nonCashLots.reduce(0.0) { sum, lot in
-                guard let h = map[lot.holdingId] else { return sum }
-                let qty        = Double(truncating: lot.remainingQty as NSDecimalNumber)
-                let cb         = Double(truncating: lot.splitAdjustedCostBasisPerShare as NSDecimalNumber)
-                let multiplier = h.isOption ? 100.0 : 1.0
-                return sum + qty * cb * multiplier
-            }
-            if currentValue > 0 {
-                chartData = [
-                    PortfolioDataPoint(date: rangeStart, value: costBasisValue > 0 ? costBasisValue : currentValue),
-                    PortfolioDataPoint(date: today, value: currentValue)
-                ]
-            }
+            chartData = syntheticPoints
             return
         }
 
-        // Build date spine — union of all dates across all symbols' histories
+        // Build date spine from real price history
         let allDates = Set(priceHistory.values.flatMap { $0.map(\.date) }).sorted()
         guard !allDates.isEmpty else { return }
 
         let map = holdingMap
-        let points: [PortfolioDataPoint] = allDates.map { date in
+        let points: [PortfolioDataPoint] = allDates.compactMap { date in
+            var hasAnyLot = false
             let value = allOpenLots.reduce(0.0) { sum, lot in
                 guard let h = map[lot.holdingId], h.assetType != .cash else { return sum }
-                // Options: carry at cost basis in the chart — no option price history on free tier
+                // Only count a lot on dates at or after its purchase date
+                let purchaseDay = Calendar.current.startOfDay(for: lot.purchaseDate)
+                guard date >= purchaseDay else { return sum }
+                // Options: carry at cost basis — no live option price history on free tier
                 if h.isOption {
+                    hasAnyLot = true
                     return sum + Double(truncating: lot.totalCostBasis as NSDecimalNumber)
                 }
                 guard let history = priceHistory[h.symbol.uppercased()],
                       let price = history.price(on: date) else { return sum }
+                hasAnyLot = true
                 let qty = Double(truncating: lot.remainingQty as NSDecimalNumber)
-                let costBasis = Double(truncating: lot.splitAdjustedCostBasisPerShare as NSDecimalNumber)
                 if h.isShortPosition {
-                    return sum + (costBasis - price) * qty
+                    let cb = Double(truncating: lot.splitAdjustedCostBasisPerShare as NSDecimalNumber)
+                    return sum + (cb - price) * qty
                 }
                 return sum + qty * price
             }
+            guard hasAnyLot, value > 0 else { return nil }
             return PortfolioDataPoint(date: date, value: value)
         }
-        .filter { $0.value > 0 }
 
         chartData = points
     }

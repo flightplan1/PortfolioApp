@@ -51,7 +51,10 @@ struct DashboardView: View {
             guard let h = holdingMap[lot.holdingId] else { return sum }
             // Options: no live contract price on free tier — carry at cost basis
             if h.isOption { return sum + lot.totalCostBasis }
-            guard let price = priceService.currentPrice(for: h.symbol) else { return sum }
+            guard let price = priceService.currentPrice(for: h.symbol) else {
+                // Price not yet loaded — use cost basis so this lot doesn't drop the total
+                return sum + (lot.remainingQty * lot.splitAdjustedCostBasisPerShare * h.lotMultiplier).rounded(to: 2)
+            }
             return sum + lot.equityContribution(at: price, multiplier: h.lotMultiplier, pnlDirection: h.pnlDirection)
         }
     }
